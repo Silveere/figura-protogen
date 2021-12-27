@@ -8,6 +8,7 @@ step_u_face=32
 step_v_face=16
 offset_u_face=64
 offset_v_face=0
+armor_enabled=true
 
 -- initialize values --
 function player_init()
@@ -62,6 +63,8 @@ function ping.expressionTest()
 end
 action_wheel.SLOT_2.setTitle('log health')
 action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
+action_wheel.SLOT_3.setTitle('Toggle Armor')
+action_wheel.SLOT_3.setFunction(function() ping.setArmor() end)
 
 -- Pings --
 --- Damage function --
@@ -74,6 +77,18 @@ end
 --- Heal function (revert expression) --
 function ping.healed(health)
 	setExpression(0,0)
+end
+--- Toggle Armor ---
+function ping.setArmor(enabled)
+	if enabled == nil then
+		armor_enabled=not armor_enabled
+	else
+		armor_enabled=enabled
+	end
+
+	for key, value in pairs(armor_model) do
+		value.setEnabled(armor_enabled)
+	end
 end
 
 
