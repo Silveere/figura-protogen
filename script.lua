@@ -21,6 +21,14 @@ expr_cooldown=0
 -- Parts --
 HEAD=model.Head.Head
 VANILLA_OUTER={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG }
+VANILLA_INNER={
+    vanilla_model.HEAD,
+    vanilla_model.TORSO,
+    vanilla_model.LEFT_ARM,
+    vanilla_model.RIGHT_ARM,
+    vanilla_model.LEFT_LEG,
+    vanilla_model.RIGHT_LEG
+}
 
 -- Expression change --
 function getExprUV(damage, expression)
@@ -157,6 +165,11 @@ function onCommand(input)
 	end
 	if input == chat_prefix .. "toggle_outer" then
 		for k, v in pairs(VANILLA_OUTER) do
+			v.setEnabled(not v.getEnabled())
+		end
+	end
+	if input == chat_prefix .. "toggle_outer" then
+		for k, v in pairs(VANILLA_INNER) do
 			v.setEnabled(not v.getEnabled())
 		end
 	end
