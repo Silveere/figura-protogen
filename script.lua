@@ -168,7 +168,7 @@ function onCommand(input)
 			v.setEnabled(not v.getEnabled())
 		end
 	end
-	if input == chat_prefix .. "toggle_outer" then
+	if input == chat_prefix .. "toggle_inner" then
 		for k, v in pairs(VANILLA_INNER) do
 			v.setEnabled(not v.getEnabled())
 		end
