@@ -93,10 +93,6 @@ function ping.setArmor(enabled)
 end
 -- }}}
 
--- does not work on multiplayer, use ping.oof()
-function onDamage(amount, source)
-end
-
 -- Timer (not mine lol) -- {{{
 do
 	local timers = {}
