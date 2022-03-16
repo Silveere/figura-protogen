@@ -14,7 +14,6 @@ armor_enabled=true
 function player_init()
 	old_health=player.getHealth()
 end
-expr_cooldown=0
 
 -- Parts --
 HEAD=model.Head.Head
@@ -43,7 +42,7 @@ function changeExpression(_damage, _expression, ticks)
 	end
 
 	HEAD.setUV(getExprUV(damage,expression))
-	expr_cooldown=ticks
+	wait(ticks, resetExpression())
 end
 function setExpression(damage, expression)
 	face_damage=damage
@@ -115,14 +114,6 @@ end
 
 -- Tick function --
 function tick()
-	-- expression reset spaghetti code --
-	if expr_cooldown > 0 then
-		expr_cooldown = expr_cooldown-1
-		if expr_cooldown <= 0 then
-			resetExpression()
-		end
-	end
-
 	-- optimization, only execute these once a second --
 	if world.getTimeOfDay() % 20 then
 		-- if face is cracked
