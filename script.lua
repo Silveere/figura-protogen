@@ -97,18 +97,18 @@ end
 
 -- Timer (not mine lol) --
 do
-    local timers = {}
-    function wait(ticks,next)
-        table.insert(timers, {t=world.getTime()+ticks,n=next})
-    end
-    function tick()
-        for key,timer in pairs(timers) do
-            if world.getTime() >= timer.t then
-                timer.n()
-                table.remove(timers,key)
-            end
-        end
-    end
+	local timers = {}
+	function wait(ticks,next)
+		table.insert(timers, {t=world.getTime()+ticks,n=next})
+	end
+	function tick()
+		for key,timer in pairs(timers) do
+			if world.getTime() >= timer.t then
+				timer.n()
+				table.remove(timers,key)
+			end
+		end
+	end
 end
 
 -- named timers (this one is mine but heavily based on the other) --
