@@ -25,7 +25,7 @@ for key, value in pairs(vanilla_model) do
 end
 vanilla_model.CAPE.setEnabled(true)
 
--- Expression change --
+-- Expression change -- {{{
 function getExprUV(damage, expression)
 	local u=offset_u_face+(damage*step_u_face)
 	local v=offset_v_face+(expression*step_v_face)
@@ -53,8 +53,9 @@ end
 function resetExpression()
 	HEAD.setUV(getExprUV(face_damage,face_expr))
 end
+-- }}}
 
--- Action Wheel --
+-- Action Wheel & Pings -- {{{
 action_wheel.SLOT_1.setTitle('test expression')
 action_wheel.SLOT_1.setFunction(function() ping.expressionTest() end)
 function ping.expressionTest()
@@ -68,7 +69,7 @@ action_wheel.SLOT_3.setFunction(function() ping.setArmor() end)
 
 -- Pings --
 --- Damage function --
-function ping.oof(health)
+function ping.oof(health) -- This is a replacement for onDamage, that function doesn't sync for some reason
 	if health <= 5 then
 		setExpression(1,0)
 	end
@@ -90,13 +91,13 @@ function ping.setArmor(enabled)
 		value.setEnabled(armor_enabled)
 	end
 end
-
+-- }}}
 
 -- does not work on multiplayer, use ping.oof()
 function onDamage(amount, source)
 end
 
--- Timer (not mine lol) --
+-- Timer (not mine lol) -- {{{
 do
 	local timers = {}
 	function wait(ticks,next)
@@ -130,6 +131,8 @@ do
 		end
 	end
 end
+
+-- }}}
 
 
 -- Tick function --
