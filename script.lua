@@ -27,6 +27,13 @@ function dumpTable(o)
       return tostring(o)
    end
 end
+
+function UV(uv)
+	return vectors.of({
+	uv[1]/TEXTURE_WIDTH,
+	uv[2]/TEXTURE_HEIGHT
+	})
+end
 -- }}}
 
 
