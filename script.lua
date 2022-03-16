@@ -42,7 +42,7 @@ function changeExpression(_damage, _expression, ticks)
 	end
 
 	HEAD.setUV(getExprUV(damage,expression))
-	wait(ticks, resetExpression())
+	namedWait(ticks, resetExpression, "resetExpression")
 end
 function setExpression(damage, expression)
 	face_damage=damage
@@ -109,6 +109,25 @@ do
             end
         end
     end
+end
+
+-- named timers (this one is mine but heavily based on the other) --
+-- if timer is armed twice before expiring it will only be called once) --
+do
+	local timers = {}
+	function namedWait(ticks, next, name)
+		-- main difference, this will overwrite an existing timer with
+		-- the same name
+		timers[name]={t=world.getTime()+ticks,n=next}
+	end
+	function tick()
+		for key, timer in pairs(timers) do
+			if world.getTime() >= timer.t then
+				timer.n()
+				timers[key]=nil
+			end
+		end
+	end
 end
 
 
