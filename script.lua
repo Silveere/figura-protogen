@@ -1,7 +1,7 @@
 -- vim: set foldmethod=marker :
 -- Texture dimensions --
-size = 128
-factor = size / 64
+TEXTURE_WIDTH = 128
+TEXTURE_HEIGHT = 128
 -- Values for UV mappings --
 face_damage=0
 face_expr=0
@@ -29,7 +29,7 @@ vanilla_model.CAPE.setEnabled(true)
 function getExprUV(damage, expression)
 	local u=offset_u_face+(damage*step_u_face)
 	local v=offset_v_face+(expression*step_v_face)
-	return {u/size,v/size}
+	return {u/TEXTURE_WIDTH,v/TEXTURE_HEIGHT}
 end
 function changeExpression(_damage, _expression, ticks)
 	-- u is damage, v is expression
