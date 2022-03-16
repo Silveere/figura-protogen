@@ -11,6 +11,23 @@ offset_u_face=64
 offset_v_face=0
 armor_enabled=true
 
+-- utility functions -- {{{
+--- dump table --
+function dumpTable(o)
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dumpTable(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+-- }}}
+
+
 -- initialize values --
 function player_init()
 	old_health=player.getHealth()
