@@ -1,3 +1,4 @@
+-- vim: set foldmethod=marker :
 -- Texture dimensions --
 size = 128
 factor = size / 64
