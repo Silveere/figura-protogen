@@ -1,4 +1,5 @@
 -- vim: set foldmethod=marker :
+--- Initial definitions ---
 -- Texture dimensions --
 TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
@@ -10,6 +11,7 @@ step_v_face=16
 offset_u_face=64
 offset_v_face=0
 armor_enabled=true
+vanilla_enabled=true
 
 -- utility functions -- {{{
 --- dump table --
@@ -35,12 +37,15 @@ end
 
 -- Parts --
 HEAD=model.Head.Head
-
--- Initial configuration --
-for key, value in pairs(vanilla_model) do
-    value.setEnabled(false)
-end
-vanilla_model.CAPE.setEnabled(true)
+VANILLA_OUTER={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG }
+VANILLA_INNER={
+    vanilla_model.HEAD,
+    vanilla_model.TORSO,
+    vanilla_model.LEFT_ARM,
+    vanilla_model.RIGHT_ARM,
+    vanilla_model.LEFT_LEG,
+    vanilla_model.RIGHT_LEG
+}
 
 -- Expression change -- {{{
 function getExprUV(damage, expression)
@@ -71,6 +76,16 @@ function resetExpression()
 	HEAD.setUV(getExprUV(face_damage,face_expr))
 end
 -- }}}
+
+function setVanilla(state)
+
+end
+
+-- Initial configuration --
+for key, value in pairs(vanilla_model) do
+    value.setEnabled(false)
+end
+vanilla_model.CAPE.setEnabled(true)
 
 -- Action Wheel & Pings -- {{{
 action_wheel.SLOT_1.setTitle('test expression')
@@ -109,6 +124,15 @@ function ping.setArmor(enabled)
 	end
 end
 -- }}}
+
+--- Toggle Vanilla ---
+function ping.setVanilla(state)
+	if state == nil then
+		vanilla_enabled=not vanilla_enabled
+	else
+		vanilla_enabled=state
+	end
+end
 
 -- Timer (not mine lol) -- {{{
 do
@@ -167,5 +191,30 @@ function tick()
 
 	-- End of tick --
 	old_health=player.getHealth()
+end
+
+-- Enable commands --
+chat_prefix="./"
+chat.setFiguraCommandPrefix(chat_prefix)
+function onCommand(input)
+	if input == chat_prefix .. "vanilla" then
+		ping.setVanilla()
+		print("Toggled vanilla skin")
+	end
+	if input == chat_prefix .. "toggle_custom" then
+		for key, value in pairs(model) do
+			value.setEnabled(not value.getEnabled())
+		end
+	end
+	if input == chat_prefix .. "toggle_outer" then
+		for k, v in pairs(VANILLA_OUTER) do
+			v.setEnabled(not v.getEnabled())
+		end
+	end
+	if input == chat_prefix .. "toggle_inner" then
+		for k, v in pairs(VANILLA_INNER) do
+			v.setEnabled(not v.getEnabled())
+		end
+	end
 end
 
