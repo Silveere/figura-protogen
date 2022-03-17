@@ -216,21 +216,22 @@ end
 chat_prefix="./"
 chat.setFiguraCommandPrefix(chat_prefix)
 function onCommand(input)
-	if input == chat_prefix .. "vanilla" then
+	input=splitstring(input)
+	if input[1] == chat_prefix .. "vanilla" then
 		ping.setVanilla()
 		print("Toggled vanilla skin")
 	end
-	if input == chat_prefix .. "toggle_custom" then
+	if input[1] == chat_prefix .. "toggle_custom" then
 		for key, value in pairs(model) do
 			value.setEnabled(not value.getEnabled())
 		end
 	end
-	if input == chat_prefix .. "toggle_outer" then
+	if input[1] == chat_prefix .. "toggle_outer" then
 		for k, v in pairs(VANILLA_OUTER) do
 			v.setEnabled(not v.getEnabled())
 		end
 	end
-	if input == chat_prefix .. "toggle_inner" then
+	if input[1] == chat_prefix .. "toggle_inner" then
 		for k, v in pairs(VANILLA_INNER) do
 			v.setEnabled(not v.getEnabled())
 		end
