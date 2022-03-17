@@ -3,13 +3,6 @@
 -- Texture dimensions --
 TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
--- Values for UV mappings --
-face_damage=0
-face_expr=0
-step_u_face=32
-step_v_face=16
-offset_u_face=64
-offset_v_face=0
 armor_enabled=true
 vanilla_enabled=true
 
@@ -67,32 +60,39 @@ VANILLA_INNER={
 }
 
 -- Expression change -- {{{
-function getExprUV(damage, expression)
-	local u=offset_u_face+(damage*step_u_face)
-	local v=offset_v_face+(expression*step_v_face)
-	return {u/TEXTURE_WIDTH,v/TEXTURE_HEIGHT}
-end
-function changeExpression(_damage, _expression, ticks)
-	-- u is damage, v is expression
-	local damage = _damage
-	local expression = _expression
-	if damage == nil then
-		damage = face_damage
-	end
-	if expression == nil then
-		expression = face_expr
-	end
+do
+	-- Values for UV mappings --
+	expr_current={damage=0, expression=0}
+	local expr_step={u=32, v=16}
+	local expr_offset={u=64, v=0}
 
-	HEAD.setUV(getExprUV(damage,expression))
-	namedWait(ticks, resetExpression, "resetExpression")
-end
-function setExpression(damage, expression)
-	face_damage=damage
-	face_expr=expression
-	HEAD.setUV(getExprUV(damage, expression))
-end
-function resetExpression()
-	HEAD.setUV(getExprUV(face_damage,face_expr))
+	local function getExprUV(damage, expression)
+		local u=expr_offset.u+(damage*expr_step.u)
+		local v=expr_offset.v+(expression*expr_step.v)
+		return UV{u, v}
+	end
+	function changeExpression(_damage, _expression, ticks)
+		-- u is damage, v is expression
+		local damage = _damage
+		local expression = _expression
+		if damage == nil then
+			damage = expr_current.damage
+		end
+		if expression == nil then
+			expression = expr_current.expression
+		end
+
+		HEAD.setUV(getExprUV(damage,expression))
+		namedWait(ticks, resetExpression, "resetExpression")
+	end
+	function setExpression(damage, expression)
+		expr_current.damage=damage
+		expr_current.expression=expression
+		HEAD.setUV(getExprUV(damage, expression))
+	end
+	function resetExpression()
+		HEAD.setUV(getExprUV(expr_current.damage,expr_current.expression))
+	end
 end
 -- }}}
 
@@ -196,7 +196,7 @@ function tick()
 	-- optimization, only execute these once a second --
 	if world.getTimeOfDay() % 20 then
 		-- if face is cracked
-		if face_damage==1 and player.getHealth() > 5 then
+		if expr_current.damage==1 and player.getHealth() > 5 then
 			ping.healed()
 		end
 	end
@@ -235,6 +235,10 @@ function onCommand(input)
 		for k, v in pairs(VANILLA_INNER) do
 			v.setEnabled(not v.getEnabled())
 		end
+	end
+	if input[1] == chat_prefix .. "test_expression" then
+		setExpression(input[2], input[3])
+		print(input[2] .. " " .. input[3])
 	end
 end
 
