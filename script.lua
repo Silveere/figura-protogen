@@ -3,6 +3,8 @@
 -- Texture dimensions --
 TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
+
+-- local state variables (do not access within pings) --
 armor_enabled=true
 vanilla_enabled=true
 
@@ -116,7 +118,7 @@ end
 action_wheel.SLOT_2.setTitle('log health')
 action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
 action_wheel.SLOT_3.setTitle('Toggle Armor')
-action_wheel.SLOT_3.setFunction(function() ping.setArmor() end)
+action_wheel.SLOT_3.setFunction(function() setArmor() end)
 
 -- Pings --
 --- Damage function --
@@ -130,16 +132,19 @@ end
 function ping.healed(health)
 	setExpression(0,0)
 end
+
 --- Toggle Armor ---
-function ping.setArmor(enabled)
-	if enabled == nil then
+function setArmor(state)
+	if state == nil then
 		armor_enabled=not armor_enabled
 	else
-		armor_enabled=enabled
+		armor_enabled=state
 	end
-
+	ping.setArmor(state)
+end
+function ping.setArmor(state)
 	for key, value in pairs(armor_model) do
-		value.setEnabled(armor_enabled)
+		value.setEnabled(state)
 	end
 end
 -- }}}
