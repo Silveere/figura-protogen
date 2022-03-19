@@ -6,7 +6,7 @@ TEXTURE_HEIGHT = 128
 
 -- local state variables (do not access within pings) --
 armor_enabled=true
-vanilla_enabled=true
+vanilla_enabled=false
 
 -- utility functions -- {{{
 --- dump table --
@@ -205,8 +205,14 @@ function player_init()
 	old_health=player.getHealth()
 end
 -- Initial configuration --
-for key, value in pairs(vanilla_model) do
-    value.setEnabled(false)
+if meta.getCanModifyVanilla() then
+	for key, value in pairs(vanilla_model) do
+		value.setEnabled(false)
+	end
+else
+	for _, v in pairs(model) do
+		v.setEnabled(false)
+	end
 end
 vanilla_model.CAPE.setEnabled(true)
 
