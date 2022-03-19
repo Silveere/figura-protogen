@@ -44,11 +44,6 @@ end
 -- }}}
 
 
--- initialize values --
-function player_init()
-	old_health=player.getHealth()
-end
-
 -- Parts --
 HEAD=model.Head.Head
 VANILLA_OUTER={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG }
@@ -60,6 +55,9 @@ VANILLA_INNER={
     vanilla_model.LEFT_LEG,
     vanilla_model.RIGHT_LEG
 }
+VANILLA_ALL={}
+for _, v in pairs(VANILLA_INNER) do table.insert(VANILLA_ALL,v) end
+for _, v in pairs(VANILLA_OUTER) do table.insert(VANILLA_ALL,v) end
 
 -- Expression change -- {{{
 do
@@ -97,16 +95,6 @@ do
 	end
 end
 -- }}}
-
-function setVanilla(state)
-
-end
-
--- Initial configuration --
-for key, value in pairs(vanilla_model) do
-    value.setEnabled(false)
-end
-vanilla_model.CAPE.setEnabled(true)
 
 -- Action Wheel & Pings -- {{{
 action_wheel.SLOT_1.setTitle('test expression')
@@ -154,11 +142,22 @@ function syncState()
 end
 
 --- Toggle Vanilla ---
-function ping.setVanilla(state)
+function setVanilla(state)
 	if state == nil then
 		vanilla_enabled=not vanilla_enabled
 	else
 		vanilla_enabled=state
+	end
+	ping.setVanilla(vanilla_enabled)
+end
+
+function ping.setVanilla(state)
+	if not meta.getCanModifyVanilla() then return end
+	for _, v in pairs(VANILLA_ALL) do
+		v.setEnabled(state)
+	end
+	for _, v in pairs(model) do
+		v.setEnabled(not state)
 	end
 end
 
@@ -200,6 +199,18 @@ end
 -- }}}
 
 
+
+-- initialize values --
+function player_init()
+	old_health=player.getHealth()
+end
+-- Initial configuration --
+for key, value in pairs(vanilla_model) do
+    value.setEnabled(false)
+end
+vanilla_model.CAPE.setEnabled(true)
+
+
 -- Tick function --
 function tick()
 	-- optimization, only execute these once a second --
@@ -232,7 +243,7 @@ chat.setFiguraCommandPrefix(chat_prefix)
 function onCommand(input)
 	input=splitstring(input)
 	if input[1] == chat_prefix .. "vanilla" then
-		ping.setVanilla()
+		setVanilla()
 		print("Toggled vanilla skin")
 	end
 	if input[1] == chat_prefix .. "toggle_custom" then
