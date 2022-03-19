@@ -140,7 +140,7 @@ function setArmor(state)
 	else
 		armor_enabled=state
 	end
-	ping.setArmor(state)
+	ping.setArmor(armor_enabled)
 end
 function ping.setArmor(state)
 	for key, value in pairs(armor_model) do
