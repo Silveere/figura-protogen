@@ -149,6 +149,10 @@ function ping.setArmor(state)
 end
 -- }}}
 
+function syncState()
+	ping.setArmor(armor_enabled)
+end
+
 --- Toggle Vanilla ---
 function ping.setVanilla(state)
 	if state == nil then
@@ -199,10 +203,15 @@ end
 -- Tick function --
 function tick()
 	-- optimization, only execute these once a second --
-	if world.getTimeOfDay() % 20 then
+	if world.getTimeOfDay() % 20 == 0 then
 		-- if face is cracked
 		if expr_current.damage==1 and player.getHealth() > 5 then
 			ping.healed()
+		end
+
+		-- Sync state every 10 seconds
+		if world.getTimeOfDay() % (20*10) == 0 then
+			syncState()
 		end
 	end
 
