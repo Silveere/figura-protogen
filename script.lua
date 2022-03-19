@@ -5,8 +5,18 @@ TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
 
 -- local state variables (do not access within pings) --
-armor_enabled=true
-vanilla_enabled=false
+armor_enabled=data.load("armor_enabled")
+if armor_enabled==nil then
+	armor_enabled=true
+else
+	armor_enabled=armor_enabled=="true"
+end
+vanilla_enabled=data.load("vanilla_enabled")
+if vanilla_enabled==nil then
+	vanilla_enabled=false
+else
+	vanilla_enabled=vanilla_enabled=="true"
+end
 
 -- utility functions -- {{{
 --- dump table --
@@ -128,6 +138,7 @@ function setArmor(state)
 	else
 		armor_enabled=state
 	end
+	data.save("armor_enabled", armor_enabled)
 	ping.setArmor(armor_enabled)
 end
 function ping.setArmor(state)
@@ -139,6 +150,7 @@ end
 
 function syncState()
 	ping.setArmor(armor_enabled)
+	ping.setVanilla(vanilla_enabled)
 end
 
 --- Toggle Vanilla ---
@@ -148,6 +160,7 @@ function setVanilla(state)
 	else
 		vanilla_enabled=state
 	end
+	data.save("vanilla_enabled", vanilla_enabled)
 	ping.setVanilla(vanilla_enabled)
 end
 
@@ -203,6 +216,7 @@ end
 -- initialize values --
 function player_init()
 	old_health=player.getHealth()
+	syncState()
 end
 -- Initial configuration --
 if meta.getCanModifyVanilla() then
