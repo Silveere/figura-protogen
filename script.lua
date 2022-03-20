@@ -17,6 +17,12 @@ if vanilla_enabled==nil then
 else
 	vanilla_enabled=vanilla_enabled=="true"
 end
+snore_enabled=data.load("snore_enabled")
+if snore_enabled==nil then
+	snore_enabled=false
+else
+	snore_enabled=snore_enabled=="true"
+end
 
 -- utility functions -- {{{
 --- dump table --
@@ -68,6 +74,9 @@ VANILLA_INNER={
 VANILLA_ALL={}
 for _, v in pairs(VANILLA_INNER) do table.insert(VANILLA_ALL,v) end
 for _, v in pairs(VANILLA_OUTER) do table.insert(VANILLA_ALL,v) end
+
+SNORES={"snore-1", "snore-2", "snore-3"}
+snore_index=1
 
 -- Expression change -- {{{
 do
@@ -146,11 +155,32 @@ function ping.setArmor(state)
 		value.setEnabled(state)
 	end
 end
+
+function snore()
+	if snore_enabled then
+		sound.playCustomSound(SNORES[snore_index], player.getPos(), vectors.of{20,1})
+		snore_index=snore_index%#SNORES+1
+	end
+end
+
+function setSnoring(state)
+	if state == nil then
+		snore_enabled=not snore_enabled
+	else
+		snore_enabled=state
+	end
+	data.save("snore_enabled", snore_enabled)
+end
+
+function ping.setSnoring(state)
+	snore_enabled=state
+end
 -- }}}
 
 function syncState()
 	ping.setArmor(armor_enabled)
 	ping.setVanilla(vanilla_enabled)
+	ping.setSnoring(snore_enabled)
 end
 
 --- Toggle Vanilla ---
@@ -259,6 +289,12 @@ function tick()
 			ping.healed()
 		end
 
+		if player.getAnimation() == "SLEEPING" then
+			if cooldown(20*4, "snore") then
+				snore()
+			end
+		end
+
 		-- Sync state every 10 seconds
 		if world.getTimeOfDay() % (20*10) == 0 then
 			syncState()
@@ -303,6 +339,12 @@ function onCommand(input)
 	if input[1] == chat_prefix .. "test_expression" then
 		setExpression(input[2], input[3])
 		print(input[2] .. " " .. input[3])
+	end
+	if input[1] == chat_prefix .. "snore" then
+		if input[2] == "toggle" then
+			setSnoring()
+			log("Snoring is now " .. (snore_enabled and "enabled" or "disabled"))
+		end
 	end
 end
 
