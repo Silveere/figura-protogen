@@ -341,7 +341,7 @@ function onCommand(input)
 		print(input[2] .. " " .. input[3])
 	end
 	if input[1] == chat_prefix .. "snore" then
-		if input[2] == "toggle" then
+		if input[2] == "toggle" or #input==1 then
 			setSnoring()
 			log("Snoring is now " .. (snore_enabled and "enabled" or "disabled"))
 		end
