@@ -319,7 +319,7 @@ function onCommand(input)
 	input=splitstring(input)
 	if input[1] == chat_prefix .. "vanilla" then
 		setVanilla()
-		print("Toggled vanilla skin")
+		print("Vanilla skin is now " .. (vanilla_enabled and "enabled" or "disabled"))
 	end
 	if input[1] == chat_prefix .. "toggle_custom" then
 		for key, value in pairs(model) do
@@ -345,6 +345,10 @@ function onCommand(input)
 			setSnoring()
 			log("Snoring is now " .. (snore_enabled and "enabled" or "disabled"))
 		end
+	end
+	if input[1] == chat_prefix .. "armor" then
+		setArmor()
+		log("Armor is now " .. (armor_enabled and "enabled" or "disabled"))
 	end
 end
 
