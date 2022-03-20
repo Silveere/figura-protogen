@@ -209,6 +209,25 @@ do
 	end
 end
 
+-- named cooldowns
+do
+	local timers={}
+	function cooldown(ticks, name)
+		if timers[name] == nil then
+			timers[name]={t=world.getTime()+ticks}
+			return true
+		end
+		return false
+	end
+	function tick()
+		for key, timer in pairs(timers) do
+			if world.getTime() >= timer.t then
+				timers[key]=nil
+			end
+		end
+	end
+end
+
 -- }}}
 
 
