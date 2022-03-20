@@ -313,7 +313,7 @@ function tick()
 end
 
 -- Enable commands --
-chat_prefix="./"
+chat_prefix="$"
 chat.setFiguraCommandPrefix(chat_prefix)
 function onCommand(input)
 	input=splitstring(input)
