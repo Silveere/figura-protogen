@@ -90,34 +90,50 @@ function mergeTable(tb1, tb2)
 		if type(k)=="number" then
 			table.insert(t, v)
 		else
-			if t[k]~=nil then
+			if t[k]==nil then
 				t[k]=v
 			end
 		end
 	end
+	return t
 end
+
+function debugPrint(var)
+	print(dumpTable(var))
+	return var
+end
+
 -- }}}
 
--- local state variables (do not access within pings) --
--- armor_enabled=data.load("armor_enabled")
--- if armor_enabled==nil then
--- 	armor_enabled=true
--- else
--- 	armor_enabled=armor_enabled=="true"
--- end
--- vanilla_enabled=data.load("vanilla_enabled")
--- if vanilla_enabled==nil then
--- 	vanilla_enabled=false
--- else
--- 	vanilla_enabled=vanilla_enabled=="true"
--- end
--- snore_enabled=data.load("snore_enabled")
--- if snore_enabled==nil then
--- 	snore_enabled=false
--- else
--- 	snore_enabled=snore_enabled=="true"
--- end
-state={}
+-- master state variables and configuration (do not access within pings) --
+do
+	local defaults={
+		["armor_enabled"]=true,
+		["vanilla_enabled"]=false,
+		["snore_enabled"]=true,
+		["print_settings"]=false
+	}
+
+	skin_state=mergeTable(
+		map(unstring,data.loadAll()),
+		defaults)
+end
+
+if skin_state.print_settings==true then
+	print("Settings:")
+	for k, v in pairs(skin_state) do
+		print(tostring(k)..": "..tostring(v))
+	end
+end
+
+function setState(name, state)
+	if state == nil then
+		skin_state[name]=not skin_state[name]
+	else
+		skin_state[name]=state
+	end
+	data.save(name, skin_state[name])
+end
 
 
 -- Parts --
@@ -136,7 +152,6 @@ for _, v in pairs(VANILLA_INNER) do table.insert(VANILLA_ALL,v) end
 for _, v in pairs(VANILLA_OUTER) do table.insert(VANILLA_ALL,v) end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
-snore_index=1
 
 -- Expression change -- {{{
 do
@@ -202,13 +217,8 @@ end
 
 --- Toggle Armor ---
 function setArmor(state)
-	if state == nil then
-		armor_enabled=not armor_enabled
-	else
-		armor_enabled=state
-	end
-	data.save("armor_enabled", armor_enabled)
-	ping.setArmor(armor_enabled)
+	setState("armor_enabled", state)
+	ping.setArmor(skin_state.armor_enabled)
 end
 function ping.setArmor(state)
 	for key, value in pairs(armor_model) do
@@ -216,35 +226,31 @@ function ping.setArmor(state)
 	end
 end
 
-function snore()
-	if snore_enabled then
-		sound.playCustomSound(SNORES[snore_index], player.getPos(), vectors.of{20,1})
-		snore_index=snore_index%#SNORES+1
+do
+	local snore_enabled=false
+	local snore_index=1
+	function snore()
+		if snore_enabled then
+			sound.playCustomSound(SNORES[snore_index],
+				player.getPos(), vectors.of{20,1})
+			snore_index=snore_index%#SNORES+1
+		end
 	end
-end
 
-function setSnoring(state)
-	if state == nil then
-		snore_enabled=not snore_enabled
-	else
+	function setSnoring(state)
+		setState("snore_enabled", state)
+		ping.setSnoring(skin_state.snore_enabled)
+	end
+
+	function ping.setSnoring(state)
 		snore_enabled=state
 	end
-	data.save("snore_enabled", snore_enabled)
-end
-
-function ping.setSnoring(state)
-	snore_enabled=state
 end
 
 --- Toggle Vanilla ---
 function setVanilla(state)
-	if state == nil then
-		vanilla_enabled=not vanilla_enabled
-	else
-		vanilla_enabled=state
-	end
-	data.save("vanilla_enabled", vanilla_enabled)
-	ping.setVanilla(vanilla_enabled)
+	setState("vanilla_enabled", state)
+	ping.setVanilla(skin_state.vanilla_enabled)
 end
 
 function ping.setVanilla(state)
@@ -258,9 +264,9 @@ function ping.setVanilla(state)
 end
 
 function syncState()
-	ping.setArmor(armor_enabled)
-	ping.setVanilla(vanilla_enabled)
-	ping.setSnoring(snore_enabled)
+	ping.setArmor(skin_state.armor_enabled)
+	ping.setVanilla(skin_state.vanilla_enabled)
+	ping.setSnoring(skin_state.snore_enabled)
 end
 -- }}}
 
@@ -379,7 +385,7 @@ function onCommand(input)
 	input=splitstring(input)
 	if input[1] == chat_prefix .. "vanilla" then
 		setVanilla()
-		print("Vanilla skin is now " .. (vanilla_enabled and "enabled" or "disabled"))
+		print("Vanilla skin is now " .. (skin_state.vanilla_enabled and "enabled" or "disabled"))
 	end
 	if input[1] == chat_prefix .. "toggle_custom" then
 		for key, value in pairs(model) do
@@ -403,12 +409,16 @@ function onCommand(input)
 	if input[1] == chat_prefix .. "snore" then
 		if input[2] == "toggle" or #input==1 then
 			setSnoring()
-			log("Snoring is now " .. (snore_enabled and "enabled" or "disabled"))
+			log("Snoring is now " .. (skin_state.snore_enabled and "enabled" or "disabled"))
 		end
 	end
 	if input[1] == chat_prefix .. "armor" then
 		setArmor()
-		log("Armor is now " .. (armor_enabled and "enabled" or "disabled"))
+		log("Armor is now " .. (skin_state.armor_enabled and "enabled" or "disabled"))
+	end
+	if input[1] == chat_prefix .. "settings" then
+		setState("print_settings")
+		log("Printing of settings on skin load is now " .. (skin_state.print_settings and "enabled" or "disabled"))
 	end
 end
 
