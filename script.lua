@@ -74,8 +74,8 @@ function filter(func, table)
 		if func(v) then
 			t[k]=v
 		end
-		return t
 	end
+	return t
 end
 
 --- Merge two tables. First table value takes precedence when conflict occurs.
