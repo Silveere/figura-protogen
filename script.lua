@@ -77,6 +77,25 @@ function filter(func, table)
 		return t
 	end
 end
+
+--- Merge two tables. First table value takes precedence when conflict occurs.
+---@param tb1 table
+---@param tb2 table
+function mergeTable(tb1, tb2)
+	local t={}
+	for k, v in pairs(tb1) do
+		t[k]=v
+	end
+	for k, v in pairs(tb2) do
+		if type(k)=="number" then
+			table.insert(t, v)
+		else
+			if t[k]~=nil then
+				t[k]=v
+			end
+		end
+	end
+end
 -- }}}
 
 -- local state variables (do not access within pings) --
