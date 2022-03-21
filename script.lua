@@ -198,7 +198,7 @@ do
 
 	function evaluatePart(part)
 		local part_key=tostring(part)
-		return ireduce(function(x, y) return x and y end,
+		return ireduce(function(x, y) return x() and y() end,
 			pm[part_key].functions, true)
 	end
 
