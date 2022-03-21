@@ -78,6 +78,43 @@ function filter(func, table)
 	return t
 end
 
+--- Unordered reduction, only use when working with dictionaries and
+--- execution order does not matter
+---@param tbl table Table to reduce
+---@param func function Function used to reduce table
+---@param init any Initial operand for reduce function
+function reduce(tbl, func, init)
+	local result = init
+	local first_loop = true
+	for _, v in pairs(table) do
+		if first_loop and init ~= nil then
+			result=v
+		else
+			result = func(result, v)
+		end
+		first_loop=false
+	end
+	return result
+end
+
+--- Ordered reduction, does not work with dictionaries
+---@param tbl table Table to reduce
+---@param func function Function used to reduce table
+---@param init any Initial operand for reduce function
+function ireduce(tbl, func, init)
+	local result = init
+	local first_loop = true
+	for _, v in ipairs(table) do
+		if first_loop and init ~= nil then
+			result=v
+		else
+			result = func(result, v)
+		end
+		first_loop=false
+	end
+	return result
+end
+
 --- Merge two tables. First table value takes precedence when conflict occurs.
 ---@param tb1 table
 ---@param tb2 table
