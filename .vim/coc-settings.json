@@ -23,7 +23,10 @@
 				"camera",
 				"chat",
 				"meta",
-				"renderer"
+				"renderer",
+				"log",
+				"data"
+
 			],
 			"disable":[
 				"lowercase-global"
