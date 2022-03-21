@@ -4,26 +4,6 @@
 TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
 
--- local state variables (do not access within pings) --
-armor_enabled=data.load("armor_enabled")
-if armor_enabled==nil then
-	armor_enabled=true
-else
-	armor_enabled=armor_enabled=="true"
-end
-vanilla_enabled=data.load("vanilla_enabled")
-if vanilla_enabled==nil then
-	vanilla_enabled=false
-else
-	vanilla_enabled=vanilla_enabled=="true"
-end
-snore_enabled=data.load("snore_enabled")
-if snore_enabled==nil then
-	snore_enabled=false
-else
-	snore_enabled=snore_enabled=="true"
-end
-
 -- utility functions -- {{{
 --- dump table --
 function dumpTable(o)
@@ -63,8 +43,8 @@ function unstring(input)
 		return nil
 	elseif input == "true" or input == "false" then
 		return input=="true"
-	elseif number(input) ~= nil then
-		return number(input)
+	elseif tonumber(input) ~= nil then
+		return tonumber(input)
 	else
 		return input
 	end
