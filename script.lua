@@ -5,7 +5,9 @@ TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
 
 -- utility functions -- {{{
---- dump table --
+
+--- Create a string representation of a table
+--- @param o table
 function dumpTable(o)
    if type(o) == 'table' then
       local s = '{ '
@@ -19,6 +21,7 @@ function dumpTable(o)
    end
 end
 
+---@param uv table
 function UV(uv)
 	return vectors.of({
 	uv[1]/TEXTURE_WIDTH,
@@ -27,6 +30,8 @@ function UV(uv)
 end
 
 
+---@param inputstr string
+---@param sep string
 function splitstring (inputstr, sep)
         if sep == nil then
                 sep = "%s"
@@ -38,6 +43,7 @@ function splitstring (inputstr, sep)
         return t
 end
 
+---@param input string
 function unstring(input)
 	if input=="nil" then
 		return nil
@@ -50,6 +56,8 @@ function unstring(input)
 	end
 end
 
+---@param func function
+---@param table table
 function map(func, table)
 	local t={}
 	for k, v in pairs(table) do
@@ -58,6 +66,8 @@ function map(func, table)
 	return t
 end
 
+---@param func function
+---@param table table
 function filter(func, table)
 	local t={}
 	for k, v in pairs(table) do
