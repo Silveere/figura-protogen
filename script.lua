@@ -57,7 +57,48 @@ function splitstring (inputstr, sep)
         end
         return t
 end
+
+function unstring(input)
+	if input=="nil" then
+		return nil
+	elseif input == "true" or input == "false" then
+		return input=="true"
+	elseif number(input) ~= nil then
+		return number(input)
+	else
+		return input
+	end
+end
+
+function map(table, func)
+	local t={}
+	for k, v in pairs(table) do
+		t[k]=func(v)
+	end
+	return t
+end
 -- }}}
+
+-- local state variables (do not access within pings) --
+-- armor_enabled=data.load("armor_enabled")
+-- if armor_enabled==nil then
+-- 	armor_enabled=true
+-- else
+-- 	armor_enabled=armor_enabled=="true"
+-- end
+-- vanilla_enabled=data.load("vanilla_enabled")
+-- if vanilla_enabled==nil then
+-- 	vanilla_enabled=false
+-- else
+-- 	vanilla_enabled=vanilla_enabled=="true"
+-- end
+-- snore_enabled=data.load("snore_enabled")
+-- if snore_enabled==nil then
+-- 	snore_enabled=false
+-- else
+-- 	snore_enabled=snore_enabled=="true"
+-- end
+state={}
 
 
 -- Parts --
