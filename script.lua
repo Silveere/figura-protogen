@@ -142,7 +142,7 @@ end
 
 -- }}}
 
--- master state variables and configuration (do not access within pings) --
+-- master state variables and configuration (do not access within pings) -- {{{
 do
 	local defaults={
 		["armor_enabled"]=true,
@@ -174,9 +174,10 @@ function setState(name, state)
 	end
 	data.save(name, skin_state[name])
 end
+-- }}}
 
 
--- Parts --
+-- Parts, groups -- {{{
 HEAD=model.Head.Head
 VANILLA_OUTER={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG }
 VANILLA_INNER={
@@ -192,6 +193,7 @@ for _, v in pairs(VANILLA_INNER) do table.insert(VANILLA_ALL,v) end
 for _, v in pairs(VANILLA_OUTER) do table.insert(VANILLA_ALL,v) end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
+-- }}}
 
 -- Expression change -- {{{
 do
@@ -368,7 +370,7 @@ end
 
 
 
--- initialize values --
+-- initialize values -- {{{
 function player_init()
 	old_health=player.getHealth()
 	syncState()
@@ -385,8 +387,9 @@ else
 end
 vanilla_model.CAPE.setEnabled(true)
 
+-- }}}
 
--- Tick function --
+-- Tick function -- {{{
 function tick()
 	-- optimization, only execute these once a second --
 	if world.getTimeOfDay() % 20 == 0 then
@@ -417,8 +420,9 @@ function tick()
 	-- End of tick --
 	old_health=player.getHealth()
 end
+-- }}}
 
--- Enable commands --
+-- Enable commands -- {{{
 chat_prefix="$"
 chat.setFiguraCommandPrefix(chat_prefix)
 function onCommand(input)
@@ -471,4 +475,4 @@ function onCommand(input)
 		end
 	end
 end
-
+--}}}
