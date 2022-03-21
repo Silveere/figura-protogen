@@ -77,6 +77,16 @@ function map(table, func)
 	end
 	return t
 end
+
+function filter(table, func)
+	local t={}
+	for k, v in pairs(table) do
+		if func(v) then
+			t[k]=v
+		end
+		return t
+	end
+end
 -- }}}
 
 -- local state variables (do not access within pings) --
