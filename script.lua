@@ -175,13 +175,6 @@ end
 function ping.setSnoring(state)
 	snore_enabled=state
 end
--- }}}
-
-function syncState()
-	ping.setArmor(armor_enabled)
-	ping.setVanilla(vanilla_enabled)
-	ping.setSnoring(snore_enabled)
-end
 
 --- Toggle Vanilla ---
 function setVanilla(state)
@@ -203,6 +196,13 @@ function ping.setVanilla(state)
 		v.setEnabled(not state)
 	end
 end
+
+function syncState()
+	ping.setArmor(armor_enabled)
+	ping.setVanilla(vanilla_enabled)
+	ping.setSnoring(snore_enabled)
+end
+-- }}}
 
 -- Timer (not mine lol) -- {{{
 do
