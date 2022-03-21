@@ -70,7 +70,7 @@ function unstring(input)
 	end
 end
 
-function map(table, func)
+function map(func, table)
 	local t={}
 	for k, v in pairs(table) do
 		t[k]=func(v)
@@ -78,7 +78,7 @@ function map(table, func)
 	return t
 end
 
-function filter(table, func)
+function filter(func, table)
 	local t={}
 	for k, v in pairs(table) do
 		if func(v) then
