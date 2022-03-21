@@ -119,11 +119,14 @@ do
 		defaults)
 end
 
-if skin_state.print_settings==true then
+function printSettings()
 	print("Settings:")
 	for k, v in pairs(skin_state) do
 		print(tostring(k)..": "..tostring(v))
 	end
+end
+if skin_state.print_settings==true then
+	printSettings()
 end
 
 function setState(name, state)
@@ -417,8 +420,18 @@ function onCommand(input)
 		log("Armor is now " .. (skin_state.armor_enabled and "enabled" or "disabled"))
 	end
 	if input[1] == chat_prefix .. "settings" then
-		setState("print_settings")
-		log("Printing of settings on skin load is now " .. (skin_state.print_settings and "enabled" or "disabled"))
+		if #input==1 then
+			printSettings()
+		elseif #input==2 then
+			log(tostring(skin_state[input[2]]))
+		elseif #input==3 then
+			if skin_state[input[2]] ~= nil then
+				setState(input[2], unstring(input[3]))
+				log(tostring(input[2]) .. " is now " .. tostring(skin_state[input[2]]))
+			else
+				log(tostring(input[2]) .. ": no such setting")
+			end
+		end
 	end
 end
 
