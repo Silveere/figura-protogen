@@ -83,7 +83,7 @@ end
 ---@param tbl table Table to reduce
 ---@param func function Function used to reduce table
 ---@param init any Initial operand for reduce function
-function reduce(tbl, func, init)
+function reduce(func, tbl, init)
 	local result = init
 	local first_loop = true
 	for _, v in pairs(table) do
@@ -101,7 +101,7 @@ end
 ---@param tbl table Table to reduce
 ---@param func function Function used to reduce table
 ---@param init any Initial operand for reduce function
-function ireduce(tbl, func, init)
+function ireduce(func, tbl, init)
 	local result = init
 	local first_loop = true
 	for _, v in ipairs(table) do
