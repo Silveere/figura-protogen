@@ -176,6 +176,45 @@ function setState(name, state)
 end
 -- }}}
 
+-- Parts management -- {{{
+do
+	local pm={}
+	--- Add function to part in Parts Manager
+	--- @
+	function addPartFunction(part, func)
+		local part_key=tostring(part)
+		if pm[part_key] == nil then
+			pm[part_key]={}
+		end
+		table.insert(pm[part_key]["functions"], func)
+		pm[part_key]["part"]=part
+	end
+
+	function addGroupFunction(group, func)
+		for _, v in pairs(group) do
+			addPartFunction(v, func)
+		end
+	end
+
+	function evaluatePart(part)
+		local part_key=tostring(part)
+		return ireduce(function(x, y) return x and y end,
+			pm[part_key].functions, true)
+	end
+
+	function refreshPart(part)
+		local part_enabled=evaluatePart(part)
+		part.setEnabled(part_enabled)
+		return part_enabled
+	end
+
+	function refreshGroup(group)
+		for _, v in pairs(group) do
+			refreshPart(v)
+		end
+	end
+end
+-- }}}
 
 -- Parts, groups -- {{{
 HEAD=model.Head.Head
