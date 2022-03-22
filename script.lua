@@ -498,7 +498,8 @@ end
 
 -- initialize values -- {{{
 function player_init()
-	old_health=player.getHealth()
+	old_state={}
+	old_state.health=player.getHealth()
 	syncState()
 end
 -- Initial configuration --
@@ -537,14 +538,17 @@ function tick()
 	end
 
 	-- Damage ping (onDamage doesn't work in multiplayer) --
-	if old_health>player.getHealth() then
+	if old_state.health>player.getHealth() then
 		-- debug
 		-- print(string.format('old_health=%03.2f, player.getHealth=%03.2f', old_health,player.getHealth()))
 		ping.oof(player.getHealth())
 	end
+	
 
+	if old_state.isUnderwater ~= player.isUnderwater() then syncState() end
+	old_state.isUnderwater=player.isUnderwater()
 	-- End of tick --
-	old_health=player.getHealth()
+	old_state.health=player.getHealth()
 end
 -- }}}
 
