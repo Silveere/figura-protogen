@@ -190,11 +190,12 @@ end
 local_state={}
 -- }}}
 
--- Parts management -- {{{
+-- PartsManager -- {{{
 do
 	PartsManager={}
 	local pm={}
 
+	--- ensure part is initialized
 	local function initPart(part)
 		local part_key=tostring(part)
 		if pm[part_key] == nil then
@@ -204,51 +205,77 @@ do
 		if pm[part_key].functions == nil then
 			pm[part_key].functions = {}
 		end
-		if pm[part_key].eval_mode==nil then
-			pm[part_key].eval_mode="chain"
+		if pm[part_key].init==nil then
+			pm[part_key].init="true"
 		end
 	end
-	--- Add function to part in Parts Manager
-	--- @
-	function PartsManager.addPartFunction(part, func)
+	--- Add function to part in PartsManager.
+	--- @param part table Any object with a setEnabled() method.
+	--- @param func function Function to add to model part's function chain.
+	--- @param init? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
+	function PartsManager.addPartFunction(part, func, init)
 		initPart(part)
 		local part_key=tostring(part)
+		if init ~= nil then
+			pm[part_key].init=init
+		end
 		table.insert(pm[part_key]["functions"], func)
 	end
-	function PartsManager.setPartEvalMode(part, mode)
+
+	--- Set initial value for chain.
+	--- @param part table Any object with a setEnabled() method.
+	--- @param init? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
+	function PartsManager.setInitialValue(part, init)
+		assert(init~=nil)
 		initPart(part)
 		local part_key=tostring(part)
-		mode=((mode=="and" or mode=="or" or mode=="chain") and
-			mode or "chain")
-		pm[part_key].eval_mode=mode
+		pm[part_key].init=init
 	end
 
+	--- Set initial value for chain on all objects in table.
+	--- @param group table A table containing objects with a setEnabled() method.
+	--- @param init? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
+	function PartsManager.setGroupInitialValue(group, init)
+		assert(init~=nil)
+		for _, v in pairs(group) do
+			PartsManager.setInitialValue(v, init)
+		end
+	end
+
+	--- Evaluate a part's chain to determine if it should be visible.
+	--- @param part table An object managed by PartsManager.
 	function PartsManager.evaluatePart(part)
 		local part_key=tostring(part)
-		local evalFunc=function(x, y) return x() and y() end
-		if pm[part_key].eval_mode=="or" then
-			evalFunc=function(x, y) return x() or y() end
-		elseif pm[part_key].eval_mode=="chain" then
-			evalFunc=function(x, y) return y(x) end
-			return ireduce(evalFunc, pm[part_key].functions, true)
-		end
-		return ireduce(evalFunc, pm[part_key].functions)
+		assert(pm[part_key] ~= nil)
+
+		local evalFunc=function(x, y) return y(x) end
+		local init=pm[part_key].init
+		return ireduce(evalFunc, pm[part_key].functions, true)
 	end
 	local evaluatePart=PartsManager.evaluatePart
 
+	--- Refresh (enable or disable) a part based on the result of it's chain.
+	--- @param part table An object managed by PartsManager.
 	function PartsManager.refreshPart(part)
 		local part_enabled=evaluatePart(part)
 		part.setEnabled(part_enabled)
 		return part_enabled
 	end
+
+	--- Refresh all parts managed by PartsManager.
 	function PartsManager.refreshAll()
-		for k, v in pairs(pm) do
+		for _, v in pairs(pm) do
 			PartsManager.refreshPart(v.part)
 		end
 	end
-	function PartsManager.addPartGroupFunction(group, func)
+
+	--- Add function to list of parts in PartsManager
+	--- @param group table A table containing objects with a setEnabled() method.
+	--- @param func function Function to add to each model part's function chain.
+	--- @param default? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
+	function PartsManager.addPartGroupFunction(group, func, default)
 		for _, v in ipairs(group) do
-			PartsManager.addPartFunction(v, func)
+			PartsManager.addPartFunction(v, func, default)
 		end
 	end
 end
