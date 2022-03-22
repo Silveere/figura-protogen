@@ -247,18 +247,20 @@ end
 
 -- Parts, groups -- {{{
 HEAD=model.Head.Head
-VANILLA_OUTER={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG }
-VANILLA_INNER={
-    vanilla_model.HEAD,
-    vanilla_model.TORSO,
-    vanilla_model.LEFT_ARM,
-    vanilla_model.RIGHT_ARM,
-    vanilla_model.LEFT_LEG,
-    vanilla_model.RIGHT_LEG
+VANILLA_PARTIAL={}
+VANILLA_GROUPS={
+	["HEAD"]={vanilla_model.HEAD, vanilla_model.HAT},
+	["TORSO"]={vanilla_model.TORSO, vanilla_model.JACKET},
+	["LEFT_ARM"]={vanilla_model.LEFT_ARM, vanilla_model.LEFT_SLEEVE},
+	["RIGHT_ARM"]={vanilla_model.RIGHT_ARM, vanilla_model.RIGHT_SLEEVE},
+	["LEFT_LEG"]={vanilla_model.LEFT_LEG, vanilla_model.LEFT_PANTS_LEG},
+	["RIGHT_LEG"]={vanilla_model.RIGHT_LEG, vanilla_model.RIGHT_PANTS_LEG},
+	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG },
+	["INNER"]={ vanilla_model.HEAD, vanilla_model.TORSO, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
+	["ALL"]={}
 }
-VANILLA_ALL={}
-for _, v in pairs(VANILLA_INNER) do table.insert(VANILLA_ALL,v) end
-for _, v in pairs(VANILLA_OUTER) do table.insert(VANILLA_ALL,v) end
+for _, v in pairs(VANILLA_GROUPS.INNER) do table.insert(VANILLA_GROUPS.ALL,v) end
+for _, v in pairs(VANILLA_GROUPS.OUTER) do table.insert(VANILLA_GROUPS.ALL,v) end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
 -- }}}
@@ -365,7 +367,7 @@ end
 
 function ping.setVanilla(state)
 	if not meta.getCanModifyVanilla() then return end
-	for _, v in pairs(VANILLA_ALL) do
+	for _, v in pairs(VANILLA_GROUPS.ALL) do
 		v.setEnabled(state)
 	end
 	for _, v in pairs(model) do
@@ -505,12 +507,12 @@ function onCommand(input)
 		end
 	end
 	if input[1] == chat_prefix .. "toggle_outer" then
-		for k, v in pairs(VANILLA_OUTER) do
+		for k, v in pairs(VANILLA_GROUPS.OUTER) do
 			v.setEnabled(not v.getEnabled())
 		end
 	end
 	if input[1] == chat_prefix .. "toggle_inner" then
-		for k, v in pairs(VANILLA_INNER) do
+		for k, v in pairs(VANILLA_GROUPS.INNER) do
 			v.setEnabled(not v.getEnabled())
 		end
 	end
