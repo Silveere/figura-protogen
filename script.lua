@@ -157,7 +157,9 @@ do
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
 		["snore_enabled"]=true,
-		["print_settings"]=false
+		["print_settings"]=false,
+		["vanilla_partial"]=false,
+		["aquatic_enabled"]=false
 	}
 
 	skin_state=mergeTable(
@@ -261,6 +263,20 @@ VANILLA_GROUPS={
 }
 for _, v in pairs(VANILLA_GROUPS.INNER) do table.insert(VANILLA_GROUPS.ALL,v) end
 for _, v in pairs(VANILLA_GROUPS.OUTER) do table.insert(VANILLA_GROUPS.ALL,v) end
+
+
+
+for _, v in pairs(VANILLA_GROUPS.ALL) do
+	PartsManager.addPartFunction(v, function() return skin_state.vanilla_enabled end)
+end
+for _, v in pairs(VANILLA_GROUPS.HEAD) do
+	PartsManager.addPartFunction(v, function(last)
+		return last and not skin_state.vanilla_partial end) end
+
+print(PartsManager.evaluatePart(vanilla_model.TORSO))
+print(PartsManager.evaluatePart(VANILLA_GROUPS.HEAD[1]))
+
+PartsManager.refreshAll()
 
 SNORES={"snore-1", "snore-2", "snore-3"}
 -- }}}
