@@ -78,6 +78,15 @@ function filter(func, table)
 	return t
 end
 
+---@param tbl table
+---@param val any
+function has_value(tbl, val)
+	for _, v in pairs(tbl) do
+		if v==val then return true end
+	end
+	return false
+end
+
 --- Unordered reduction, only use when working with dictionaries and
 --- execution order does not matter
 ---@param tbl table Table to reduce
@@ -86,8 +95,8 @@ end
 function reduce(func, tbl, init)
 	local result = init
 	local first_loop = true
-	for _, v in pairs(table) do
-		if first_loop and init ~= nil then
+	for _, v in pairs(tbl) do
+		if first_loop and init == nil then
 			result=v
 		else
 			result = func(result, v)
@@ -104,8 +113,8 @@ end
 function ireduce(func, tbl, init)
 	local result = init
 	local first_loop = true
-	for _, v in ipairs(table) do
-		if first_loop and init ~= nil then
+	for _, v in ipairs(tbl) do
+		if first_loop and init == nil then
 			result=v
 		else
 			result = func(result, v)
@@ -178,41 +187,61 @@ end
 
 -- Parts management -- {{{
 do
+	PartsManager={}
 	local pm={}
-	--- Add function to part in Parts Manager
-	--- @
-	function addPartFunction(part, func)
+
+	local function initPart(part)
 		local part_key=tostring(part)
 		if pm[part_key] == nil then
 			pm[part_key]={}
 		end
-		table.insert(pm[part_key]["functions"], func)
-		pm[part_key]["part"]=part
-	end
-
-	function addGroupFunction(group, func)
-		for _, v in pairs(group) do
-			addPartFunction(v, func)
+		pm[part_key].part=part
+		if pm[part_key].functions == nil then
+			pm[part_key].functions = {}
+		end
+		if pm[part_key].eval_mode==nil then
+			pm[part_key].eval_mode="chain"
 		end
 	end
-
-	function evaluatePart(part)
+	--- Add function to part in Parts Manager
+	--- @
+	function PartsManager.addPartFunction(part, func)
+		initPart(part)
 		local part_key=tostring(part)
-		return ireduce(function(x, y) return x() and y() end,
-			pm[part_key].functions, true)
+		table.insert(pm[part_key]["functions"], func)
+	end
+	function PartsManager.setPartEvalMode(part, mode)
+		initPart(part)
+		local part_key=tostring(part)
+		mode=((mode=="and" or mode=="or" or mode=="chain") and
+			mode or "chain")
+		pm[part_key].eval_mode=mode
 	end
 
-	function refreshPart(part)
+	function PartsManager.evaluatePart(part)
+		local part_key=tostring(part)
+		local evalFunc=function(x, y) return x() and y() end
+		if pm[part_key].eval_mode=="or" then
+			evalFunc=function(x, y) return x() or y() end
+		elseif pm[part_key].eval_mode=="chain" then
+			evalFunc=function(x, y) return y(x) end
+			return ireduce(evalFunc, pm[part_key].functions, true)
+		end
+		return ireduce(evalFunc, pm[part_key].functions)
+	end
+	local evaluatePart=PartsManager.evaluatePart
+
+	function PartsManager.refreshPart(part)
 		local part_enabled=evaluatePart(part)
 		part.setEnabled(part_enabled)
 		return part_enabled
 	end
-
-	function refreshGroup(group)
-		for _, v in pairs(group) do
-			refreshPart(v)
+	function PartsManager.refreshAll()
+		for k, v in pairs(pm) do
+			PartsManager.refreshPart(v.part)
 		end
 	end
+
 end
 -- }}}
 
