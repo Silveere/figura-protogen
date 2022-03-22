@@ -185,6 +185,9 @@ function setState(name, state)
 	end
 	data.save(name, skin_state[name])
 end
+
+-- Local State (these are copied by pings at runtime) --
+local_state={}
 -- }}}
 
 -- Parts management -- {{{
@@ -243,7 +246,11 @@ do
 			PartsManager.refreshPart(v.part)
 		end
 	end
-
+	function PartsManager.addPartGroupFunction(group, func)
+		for _, v in ipairs(group) do
+			PartsManager.addPartFunction(v, func)
+		end
+	end
 end
 -- }}}
 
@@ -259,24 +266,65 @@ VANILLA_GROUPS={
 	["RIGHT_LEG"]={vanilla_model.RIGHT_LEG, vanilla_model.RIGHT_PANTS_LEG},
 	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG },
 	["INNER"]={ vanilla_model.HEAD, vanilla_model.TORSO, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
-	["ALL"]={}
+	["ALL"]={},
+	["ARMOR"]={}
 }
+
 for _, v in pairs(VANILLA_GROUPS.INNER) do table.insert(VANILLA_GROUPS.ALL,v) end
 for _, v in pairs(VANILLA_GROUPS.OUTER) do table.insert(VANILLA_GROUPS.ALL,v) end
+for _, v in pairs(armor_model) do table.insert(VANILLA_GROUPS.ARMOR, v) end
+
+CUSTOM_GROUPS={} -- RightArm LeftArm RightLeg LeftLeg Body Head
+for _, v in pairs(model) do table.insert(CUSTOM_GROUPS, v) end
+
+-- }}}
 
 
+--  PartsManager rules {{{
+-- Vanilla rules
 
-for _, v in pairs(VANILLA_GROUPS.ALL) do
-	PartsManager.addPartFunction(v, function() return skin_state.vanilla_enabled end)
+do
+	local function aquaticTailVisible()
+		return local_state.aquatic_enabled and player.isUnderwater() end
+
+	local function vanillaPartial()
+		if local_state.vanilla_enabled then
+			return false
+		end
+		return local_state.vanilla_partial
+	end
+
+
+	--- Vanilla state
+	-- Show all in vanilla partial
+	PartsManager.addPartGroupFunction(VANILLA_GROUPS.ALL, function() return
+		vanillaPartial() end)
+	-- no legs in water if tail enabled
+	PartsManager.addPartGroupFunction(VANILLA_GROUPS.LEFT_LEG, function(last) return last and not aquaticTailVisible() end)
+	PartsManager.addPartGroupFunction(VANILLA_GROUPS.RIGHT_LEG, function(last) return last and not aquaticTailVisible() end)
+	-- no vanilla head in partial vanilla
+	PartsManager.addPartGroupFunction(VANILLA_GROUPS.HEAD, function(last)
+		return last and not vanillaPartial() end)
+	-- Always true if vanilla_enabled
+	PartsManager.addPartGroupFunction(VANILLA_GROUPS.ALL,
+		function(last) return last or local_state.vanilla_enabled end)
+
+	--- Armor state
+	PartsManager.addPartGroupFunction(VANILLA_GROUPS.ARMOR,
+		function(last) return local_state.armor_enabled end)
+
+	--- Custom state
+	-- Disable model in vanilla partial
+	PartsManager.addPartGroupFunction(CUSTOM_GROUPS, function(last) return not vanillaPartial() end)
+	-- no legs in water if tail enabled
+	PartsManager.addPartFunction(model.LeftLeg, function(last) return last and not aquaticTailVisible() end)
+	PartsManager.addPartFunction(model.RightLeg, function(last) return last and not aquaticTailVisible() end)
+
+	-- Enable head in vanilla partial
+	PartsManager.addPartFunction(model.Head, function(last) return last or vanillaPartial() end)
+	-- Disable when vanilla_enabled
+	PartsManager.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
 end
-for _, v in pairs(VANILLA_GROUPS.HEAD) do
-	PartsManager.addPartFunction(v, function(last)
-		return last and not skin_state.vanilla_partial end) end
-
-print(PartsManager.evaluatePart(vanilla_model.TORSO))
-print(PartsManager.evaluatePart(VANILLA_GROUPS.HEAD[1]))
-
-PartsManager.refreshAll()
 
 SNORES={"snore-1", "snore-2", "snore-3"}
 -- }}}
@@ -346,12 +394,7 @@ end
 --- Toggle Armor ---
 function setArmor(state)
 	setState("armor_enabled", state)
-	ping.setArmor(skin_state.armor_enabled)
-end
-function ping.setArmor(state)
-	for key, value in pairs(armor_model) do
-		value.setEnabled(state)
-	end
+	syncState()
 end
 
 do
@@ -378,23 +421,20 @@ end
 --- Toggle Vanilla ---
 function setVanilla(state)
 	setState("vanilla_enabled", state)
-	ping.setVanilla(skin_state.vanilla_enabled)
+	syncState()
 end
 
-function ping.setVanilla(state)
-	if not meta.getCanModifyVanilla() then return end
-	for _, v in pairs(VANILLA_GROUPS.ALL) do
-		v.setEnabled(state)
-	end
-	for _, v in pairs(model) do
-		v.setEnabled(not state)
-	end
-end
 
 function syncState()
-	ping.setArmor(skin_state.armor_enabled)
-	ping.setVanilla(skin_state.vanilla_enabled)
 	ping.setSnoring(skin_state.snore_enabled)
+	ping.syncState(skin_state)
+end
+
+function ping.syncState(tbl)
+	for k, v in pairs(tbl) do
+		local_state[k]=v
+	end
+	PartsManager.refreshAll()
 end
 -- }}}
 
@@ -555,10 +595,15 @@ function onCommand(input)
 			if skin_state[input[2]] ~= nil then
 				setState(input[2], unstring(input[3]))
 				log(tostring(input[2]) .. " is now " .. tostring(skin_state[input[2]]))
+				syncState()
 			else
 				log(tostring(input[2]) .. ": no such setting")
 			end
 		end
+	end
+	if input[1] == chat_prefix .. "pv" then
+		setState("vanilla_partial")
+		syncState()
 	end
 end
 --}}}
