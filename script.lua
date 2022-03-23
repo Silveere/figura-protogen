@@ -184,6 +184,21 @@ function debugPrint(var)
 	return var
 end
 
+--- Recursively walk a model tree and return a table containing the group and each of its sub-groups
+--- @param group table The group to recurse
+--- @return table Resulting table
+function recurseModelGroup(group)
+	local t={}
+	table.insert(t, group)
+	if group.getType()=="GROUP" then
+		for k, v in pairs(group.getChildren()) do
+			for _, v2 in pairs(recurseModelGroup(v)) do
+				table.insert(t, v2)
+			end
+		end
+	end
+	return t
+end
 -- }}}
 
 -- master state variables and configuration (do not access within pings) -- {{{
