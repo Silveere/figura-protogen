@@ -1,4 +1,4 @@
--- vim: set foldmethod=marker :
+-- vim: set foldmethod=marker ts=4 sw=4 :
 --- Initial definitions ---
 -- Texture dimensions --
 TEXTURE_WIDTH = 128
