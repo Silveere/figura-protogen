@@ -400,8 +400,9 @@ do
 	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail}
 	PM.addPartGroupFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 
-	-- Enable head in vanilla partial
-	PM.addPartFunction(model.Head, function(last) return last or vanillaPartial() end)
+	-- Enable certain parts in vanilla partial
+	local vanilla_partial_enabled={model.Head, model.Body_Tail}
+	PM.addPartGroupFunction(vanilla_partial_enabled, function(last) return last or vanillaPartial() end)
 	-- Disable when vanilla_enabled
 	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
 end
