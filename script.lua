@@ -396,9 +396,9 @@ do
 	--- Custom state
 	-- Disable model in vanilla partial
 	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return not vanillaPartial() end)
-	-- no legs in water if tail enabled
-	PM.addPartFunction(model.LeftLeg, function(last) return last and not aquaticTailVisible() end)
-	PM.addPartFunction(model.RightLeg, function(last) return last and not aquaticTailVisible() end)
+	-- no legs, regular tail in water if tail enabled
+	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail}
+	PM.addPartGroupFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 
 	-- Enable head in vanilla partial
 	PM.addPartFunction(model.Head, function(last) return last or vanillaPartial() end)
