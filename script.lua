@@ -326,36 +326,39 @@ do
 		return local_state.vanilla_partial
 	end
 
+	-- eventually replace this with an instance once PartsManager becomes a class
+	local PM=PartsManager
+
 
 	--- Vanilla state
 	-- Show all in vanilla partial
-	PartsManager.addPartGroupFunction(VANILLA_GROUPS.ALL, function() return
+	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function() return
 		vanillaPartial() end)
 	-- no legs in water if tail enabled
-	PartsManager.addPartGroupFunction(VANILLA_GROUPS.LEFT_LEG, function(last) return last and not aquaticTailVisible() end)
-	PartsManager.addPartGroupFunction(VANILLA_GROUPS.RIGHT_LEG, function(last) return last and not aquaticTailVisible() end)
+	PM.addPartGroupFunction(VANILLA_GROUPS.LEFT_LEG, function(last) return last and not aquaticTailVisible() end)
+	PM.addPartGroupFunction(VANILLA_GROUPS.RIGHT_LEG, function(last) return last and not aquaticTailVisible() end)
 	-- no vanilla head in partial vanilla
-	PartsManager.addPartGroupFunction(VANILLA_GROUPS.HEAD, function(last)
+	PM.addPartGroupFunction(VANILLA_GROUPS.HEAD, function(last)
 		return last and not vanillaPartial() end)
 	-- Always true if vanilla_enabled
-	PartsManager.addPartGroupFunction(VANILLA_GROUPS.ALL,
+	PM.addPartGroupFunction(VANILLA_GROUPS.ALL,
 		function(last) return last or local_state.vanilla_enabled end)
 
 	--- Armor state
-	PartsManager.addPartGroupFunction(VANILLA_GROUPS.ARMOR,
+	PM.addPartGroupFunction(VANILLA_GROUPS.ARMOR,
 		function(last) return local_state.armor_enabled end)
 
 	--- Custom state
 	-- Disable model in vanilla partial
-	PartsManager.addPartGroupFunction(CUSTOM_GROUPS, function(last) return not vanillaPartial() end)
+	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return not vanillaPartial() end)
 	-- no legs in water if tail enabled
-	PartsManager.addPartFunction(model.LeftLeg, function(last) return last and not aquaticTailVisible() end)
-	PartsManager.addPartFunction(model.RightLeg, function(last) return last and not aquaticTailVisible() end)
+	PM.addPartFunction(model.LeftLeg, function(last) return last and not aquaticTailVisible() end)
+	PM.addPartFunction(model.RightLeg, function(last) return last and not aquaticTailVisible() end)
 
 	-- Enable head in vanilla partial
-	PartsManager.addPartFunction(model.Head, function(last) return last or vanillaPartial() end)
+	PM.addPartFunction(model.Head, function(last) return last or vanillaPartial() end)
 	-- Disable when vanilla_enabled
-	PartsManager.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
+	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
