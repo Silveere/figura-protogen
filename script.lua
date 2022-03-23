@@ -9,16 +9,21 @@ TEXTURE_HEIGHT = 128
 --- Create a string representation of a table
 --- @param o table
 function dumpTable(o)
-   if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-         if type(k) ~= 'number' then k = '"'..k..'"' end
-         s = s .. '['..k..'] = ' .. dumpTable(v) .. ','
-      end
-      return s .. '} '
-   else
-      return tostring(o)
-   end
+	if type(o) == 'table' then
+		local s = '{ '
+		local first_loop=true
+		for k,v in pairs(o) do
+			if not first_loop then
+				s = s .. ', '
+			end
+			first_loop=false
+			if type(k) ~= 'number' then k = '"'..k..'"' end
+			s = s .. '['..k..'] = ' .. dumpTable(v)
+		end
+		return s .. '} '
+	else
+		return tostring(o)
+	end
 end
 
 ---@param uv table
