@@ -202,7 +202,7 @@ end
 -- }}}
 
 -- master state variables and configuration (do not access within pings) -- {{{
-do
+if client.isHost() then
 	local defaults={
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
@@ -213,6 +213,13 @@ do
 		["aquatic_enabled"]=false
 	}
 
+	local savedData=data.loadAll()
+	if savedData == nil then
+		for k, v in pairs(defaults) do
+			data.save(k, v)
+		end
+		savedData=data.loadAll()
+	end
 	skin_state=mergeTable(
 		map(unstring,data.loadAll()),
 		defaults)
