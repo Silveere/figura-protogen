@@ -26,6 +26,36 @@ function dumpTable(o)
 	end
 end
 
+do
+	local function format_any_value(obj, buffer)
+		local _type = type(obj)
+		if _type == "table" then
+			buffer[#buffer + 1] = '{"'
+			for key, value in next, obj, nil do
+				buffer[#buffer + 1] = tostring(key) .. '":'
+				format_any_value(value, buffer)
+				buffer[#buffer + 1] = ',"'
+			end
+			buffer[#buffer] = '}' -- note the overwrite
+		elseif _type == "string" then
+			buffer[#buffer + 1] = '"' .. obj .. '"'
+		elseif _type == "boolean" or _type == "number" then
+			buffer[#buffer + 1] = tostring(obj)
+		else
+			buffer[#buffer + 1] = '"???' .. _type .. '???"'
+		end
+	end
+	--- Dumps object as UNSAFE json, i stole this from stackoverflow so i could use json.tool to format it so it's easier to read
+	function dumpJSON(obj)
+		if obj == nil then return "null" else
+			local buffer = {}
+			format_any_value(obj, buffer)
+			return table.concat(buffer)
+		end
+	end
+end
+
+
 ---@param uv table
 function UV(uv)
 	return vectors.of({
