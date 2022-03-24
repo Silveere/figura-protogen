@@ -367,8 +367,7 @@ for _, v in pairs(VANILLA_GROUPS.INNER) do table.insert(VANILLA_GROUPS.ALL,v) en
 for _, v in pairs(VANILLA_GROUPS.OUTER) do table.insert(VANILLA_GROUPS.ALL,v) end
 for _, v in pairs(armor_model) do table.insert(VANILLA_GROUPS.ARMOR, v) end
 
-CUSTOM_GROUPS={} -- RightArm LeftArm RightLeg LeftLeg Body Head
-for _, v in pairs(model) do table.insert(CUSTOM_GROUPS, v) end
+MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.LeftLeg, model.Body } -- RightArm LeftArm RightLeg LeftLeg Body Head
 
 -- }}}
 
@@ -377,6 +376,7 @@ for _, v in pairs(model) do table.insert(CUSTOM_GROUPS, v) end
 -- Vanilla rules
 
 do
+	local can_modify_vanilla=meta.getCanModifyVanilla()
 	local function aquaticTailVisible()
 		return local_state.aquatic_enabled and player.isUnderwater() end
 
@@ -385,6 +385,10 @@ do
 			return false
 		end
 		return local_state.vanilla_partial
+	end
+
+	local function forceVanilla()
+		return can_modify_vanilla or local_state.vanilla_enabled
 	end
 
 	-- eventually replace this with an instance once PartsManager becomes a class
@@ -403,7 +407,7 @@ do
 	PM.addPartGroupFunction(VANILLA_GROUPS.HEAD, function(last)
 		return last and not vanillaPartial() end)
 	-- Always true if vanilla_enabled
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function(last) return last or local_state.vanilla_enabled end)
+	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function(last) return last or forceVanilla() end)
 
 	--- Armor state
 	PM.addPartGroupFunction(VANILLA_GROUPS.ARMOR, function(last) return local_state.armor_enabled end)
@@ -411,7 +415,7 @@ do
 	--- Custom state
 	local tail_parts=mergeTable({model.Body.TailBase}, recurseModelGroup(model.Body.MTail))
 	-- Disable model in vanilla partial
-	local vanilla_partial_disabled=mergeTable(CUSTOM_GROUPS, {model.Body.Body, model.Body.BodyLayer})
+	local vanilla_partial_disabled=mergeTable(MAIN_GROUPS, {model.Body.Body, model.Body.BodyLayer})
 	local vanilla_partial_enabled=mergeTable(tail_parts, {model.Head, model.Body_Tail, model.Body})
 	PM.addPartGroupFunction(vanilla_partial_disabled, function(last) return not vanillaPartial() end)
 	-- Enable certain parts in vanilla partial
@@ -427,7 +431,7 @@ do
 	PM.addPartGroupFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
 
 	-- Disable when vanilla_enabled
-	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
+	PM.addPartGroupFunction(MAIN_GROUPS, function(last) return last and not forceVanilla() end)
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
