@@ -544,8 +544,7 @@ end
 
 function syncState()
 	ping.setSnoring(skin_state.snore_enabled)
-	local_state=getLocalState()
-	ping.syncState(local_state)
+	ping.syncState(getLocalState())
 end
 
 function ping.syncState(tbl)
