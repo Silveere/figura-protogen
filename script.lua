@@ -540,7 +540,7 @@ function ping.syncState(tbl)
 	for k, v in pairs(tbl) do
 		local_state[k]=v
 	end
-	PartsManager.refreshAll()
+	rateLimit(1, PartsManager.refreshAll, "refreshAll")
 end
 
 function ping.tPose()
@@ -600,6 +600,12 @@ do
 				timers[key]=nil
 			end
 		end
+	end
+end
+
+function rateLimit(ticks, next, name)
+	if cooldown(ticks+1, name) then
+		namedWait(ticks, next, name)
 	end
 end
 
