@@ -617,6 +617,9 @@ end
 function player_init()
 	old_state={}
 	old_state.health=player.getHealth()
+	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
+		v.setEnabled(true)
+	end
 	syncState()
 end
 -- Initial configuration --
