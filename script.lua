@@ -253,6 +253,13 @@ function setState(name, state)
 end
 
 -- Local State (these are copied by pings at runtime) --
+function getLocalState()
+	local ret={}
+	for k, v in pairs(skin_state) do
+		ret[k]=v
+	end
+	return ret
+end
 local_state={}
 -- }}}
 
@@ -388,7 +395,7 @@ do
 	end
 
 	local function forceVanilla()
-		return can_modify_vanilla or local_state.vanilla_enabled
+		return not can_modify_vanilla or local_state.vanilla_enabled
 	end
 
 	-- eventually replace this with an instance once PartsManager becomes a class
@@ -537,7 +544,8 @@ end
 
 function syncState()
 	ping.setSnoring(skin_state.snore_enabled)
-	ping.syncState(skin_state)
+	local_state=getLocalState()
+	ping.syncState(local_state)
 end
 
 function ping.syncState(tbl)
@@ -623,6 +631,10 @@ function player_init()
 	old_state.health=player.getHealth()
 	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
 		v.setEnabled(true)
+	end
+	local_state=getLocalState()
+	if cooldown(1, "refreshAll") then
+		PartsManager.refreshAll()
 	end
 	syncState()
 end
