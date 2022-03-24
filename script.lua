@@ -478,6 +478,8 @@ action_wheel.SLOT_2.setTitle('log health')
 action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
 action_wheel.SLOT_3.setTitle('Toggle Armor')
 action_wheel.SLOT_3.setFunction(function() setArmor() end)
+action_wheel.SLOT_4.setTitle('T-Pose')
+action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
 
 -- Pings --
 --- Damage function --
@@ -536,6 +538,11 @@ function ping.syncState(tbl)
 		local_state[k]=v
 	end
 	PartsManager.refreshAll()
+end
+
+function ping.tPose()
+	local_state.emote_vector=player.getPos()
+	animation.tpose.start()
 end
 -- }}}
 
@@ -643,6 +650,11 @@ function tick()
 		-- print(string.format('old_health=%03.2f, player.getHealth=%03.2f', old_health,player.getHealth()))
 		ping.oof(player.getHealth())
 	end
+
+	if animation.tpose.isPlaying() and local_state.emote_vector.distanceTo(player.getPos()) >= 0.5 then
+		animation.tpose.stop()
+	end
+
 
 	if old_state.isUnderwater ~= player.isUnderwater() then syncState() end
 	old_state.isUnderwater=player.isUnderwater()
