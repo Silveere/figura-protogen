@@ -419,11 +419,12 @@ do
 	-- no legs, regular tail in water if tail enabled
 	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail}
 	PM.addPartGroupFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
+	-- aquatic tail in water
+	local tailParts=mergeTable({model.Body.TailBase}, recurseModelGroup(model.Body.MTail))
+	PM.addPartGroupFunction(tailParts, function(last) return last and aquaticTailVisible() end)
 
 	-- Disable when vanilla_enabled
 	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
-
-
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
@@ -642,7 +643,6 @@ function tick()
 		-- print(string.format('old_health=%03.2f, player.getHealth=%03.2f', old_health,player.getHealth()))
 		ping.oof(player.getHealth())
 	end
-	
 
 	if old_state.isUnderwater ~= player.isUnderwater() then syncState() end
 	old_state.isUnderwater=player.isUnderwater()
@@ -655,6 +655,7 @@ end
 chat_prefix="$"
 chat.setFiguraCommandPrefix(chat_prefix)
 function onCommand(input)
+	local pfx=chat_prefix
 	input=splitstring(input)
 	if input[1] == chat_prefix .. "vanilla" then
 		setVanilla()
