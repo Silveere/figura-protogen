@@ -201,6 +201,14 @@ function recurseModelGroup(group)
 end
 -- }}}
 
+-- Math {{{
+--- Sine function with period and amplitude
+--- @param x number Input value
+--- @param period number Period of sine wave
+--- @param amp number Peak amplitude of sine wave
+function wave(x, period, amp) return math.sin((2/period)*math.pi*(x%period))*amp end
+-- }}}
+
 -- master state variables and configuration (do not access within pings) -- {{{
 if client.isHost() then
 	local defaults={
