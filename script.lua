@@ -521,7 +521,7 @@ function ping.syncState(tbl)
 	for k, v in pairs(tbl) do
 		local_state[k]=v
 	end
-	PartsManager.refreshAll()
+	rateLimit(1, PartsManager.refreshAll, "refreshAll")
 end
 -- }}}
 
@@ -579,6 +579,12 @@ do
 	end
 end
 
+function rateLimit(ticks, next, name)
+	if cooldown(ticks+1, name) then
+		namedWait(ticks, next, name)
+	end
+end
+
 -- }}}
 
 
@@ -630,7 +636,6 @@ function tick()
 		-- print(string.format('old_health=%03.2f, player.getHealth=%03.2f', old_health,player.getHealth()))
 		ping.oof(player.getHealth())
 	end
-	
 
 	if old_state.isUnderwater ~= player.isUnderwater() then syncState() end
 	old_state.isUnderwater=player.isUnderwater()
