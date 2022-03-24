@@ -218,7 +218,8 @@ if client.isHost() then
 		["print_settings"]=false,
 		["vanilla_partial"]=false,
 		["tail_enabled"]=true,
-		["aquatic_enabled"]=false
+		["aquatic_enabled"]=false,
+		["aquatic_override"]=false
 	}
 
 	local savedData=data.loadAll()
@@ -385,7 +386,7 @@ MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.Le
 do
 	local can_modify_vanilla=meta.getCanModifyVanilla()
 	local function aquaticTailVisible()
-		return local_state.aquatic_enabled and player.isUnderwater() end
+		return local_state.aquatic_enabled and player.isUnderwater() or local_state.aquatic_override end
 
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
