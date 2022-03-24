@@ -409,19 +409,22 @@ do
 	PM.addPartGroupFunction(VANILLA_GROUPS.ARMOR, function(last) return local_state.armor_enabled end)
 
 	--- Custom state
+	local tail_parts=mergeTable({model.Body.TailBase}, recurseModelGroup(model.Body.MTail))
 	-- Disable model in vanilla partial
-	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return not vanillaPartial() end)
+	local vanilla_partial_disabled=mergeTable(CUSTOM_GROUPS, {model.Body.Body, model.Body.BodyLayer})
+	local vanilla_partial_enabled=mergeTable(tail_parts, {model.Head, model.Body_Tail, model.Body})
+	PM.addPartGroupFunction(vanilla_partial_disabled, function(last) return not vanillaPartial() end)
 	-- Enable certain parts in vanilla partial
-	local vanilla_partial_enabled={model.Head, model.Body_Tail}
 	PM.addPartGroupFunction(vanilla_partial_enabled, function(last) return last or vanillaPartial() end)
+	PM.addPartGroupFunction(tail_parts, function(last) return last or vanillaPartial() end)
+
 	-- Enable tail setting
 	PM.addPartFunction(model.Body_Tail, function(last) return last and local_state.tail_enabled end)
 	-- no legs, regular tail in water if tail enabled
 	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail}
 	PM.addPartGroupFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 	-- aquatic tail in water
-	local tailParts=mergeTable({model.Body.TailBase}, recurseModelGroup(model.Body.MTail))
-	PM.addPartGroupFunction(tailParts, function(last) return last and aquaticTailVisible() end)
+	PM.addPartGroupFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
 
 	-- Disable when vanilla_enabled
 	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
