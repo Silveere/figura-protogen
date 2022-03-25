@@ -621,9 +621,7 @@ function pmRefresh()
 end
 
 function ping.syncState(tbl)
-	for k, v in pairs(tbl) do
-		local_state[k]=v
-	end
+	local_state=tbl
 	pmRefresh()
 end
 
@@ -740,46 +738,52 @@ function armor()
 	local boots        = string.sub(boots_item.getType(),    11, -7)
 
 	if local_state.armor_enabled then
-		-- leggings
-		armor_glint.leggings=leggings_item.hasGlint()
-		local leggings_color=colorArmor(leggings_item) or armor_color[leggings]
-		local uv=tailuvm:getUV(leggings)
-		if uv ~= nil then
-			armor_state.leggings=true
-			for k, v in pairs(TAIL_LEGGINGS) do
-				v.setUV(uv)
-			end
-			if leggings=="leather" then
-				for k, v in pairs(TAIL_LEGGINGS_COLOR) do
-					v.setColor(leggings_color)
+		if old_state.leggings ~= leggings then
+			-- leggings
+			armor_glint.leggings=leggings_item.hasGlint()
+			local leggings_color=colorArmor(leggings_item) or armor_color[leggings]
+			local uv=tailuvm:getUV(leggings)
+			if uv ~= nil then
+				armor_state.leggings=true
+				for k, v in pairs(TAIL_LEGGINGS) do
+					v.setUV(uv)
+				end
+				if leggings=="leather" then
+					for k, v in pairs(TAIL_LEGGINGS_COLOR) do
+						v.setColor(leggings_color)
+					end
+				else
+					for k, v in pairs(TAIL_LEGGINGS) do
+						v.setColor({1, 1, 1})
+					end
 				end
 			else
-				for k, v in pairs(TAIL_LEGGINGS) do
-					v.setColor({1, 1, 1})
-				end
+				armor_state.leggings=false
 			end
-		else
-			armor_state.leggings=false
+			pmRefresh()
 		end
 
-		-- boots
-		armor_glint.boots=boots_item.hasGlint()
-		local boots_color=colorArmor(boots_item) or armor_color[boots]
-		local uv_boots=tailuvm:getUV(boots)
-		if uv_boots ~= nil then
-			armor_state.boots=true
-			for k, v in pairs(TAIL_BOOTS) do
-				v.setUV(uv_boots)
-			end
-			if boots=="leather" then
-				model.Body.MTail1.MTail2.MTail3.Boot.setColor(boots_color)
-				armor_state.leather_boots=true
+		if old_state.boots ~= boots then
+			-- boots
+			armor_glint.boots=boots_item.hasGlint()
+			local boots_color=colorArmor(boots_item) or armor_color[boots]
+			local uv_boots=tailuvm:getUV(boots)
+			if uv_boots ~= nil then
+				armor_state.boots=true
+				for k, v in pairs(TAIL_BOOTS) do
+					v.setUV(uv_boots)
+				end
+				if boots=="leather" then
+					model.Body.MTail1.MTail2.MTail3.Boot.setColor(boots_color)
+					armor_state.leather_boots=true
+				else
+					model.Body.MTail1.MTail2.MTail3.Boot.setColor({1, 1, 1})
+					armor_state.leather_boots=false
+				end
 			else
-				model.Body.MTail1.MTail2.MTail3.Boot.setColor({1, 1, 1})
-				armor_state.leather_boots=false
+				armor_state.boots=false
 			end
-		else
-			armor_state.boots=false
+			pmRefresh()
 		end
 	else
 		armor_glint.leggings=false
@@ -873,9 +877,6 @@ function player_init()
 		v.setEnabled(true)
 	end
 	local_state=getLocalState()
-	if cooldown(1, "refreshAll") then
-		PartsManager.refreshAll()
-	end
 	syncState()
 end
 -- Initial configuration --
@@ -930,8 +931,6 @@ function tick()
 		cooldown(1, "refreshAll")
 		PartsManager.refreshAll()
 		refreshed=true
-	else
-		pmRefresh()
 	end
 	updateTailVisibility()
 
