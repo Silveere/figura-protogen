@@ -1,8 +1,8 @@
 -- vim: set foldmethod=marker ts=4 sw=4 :
 --- Initial definitions ---
 -- Texture dimensions --
-TEXTURE_WIDTH = 128
-TEXTURE_HEIGHT = 128
+TEXTURE_WIDTH = 256
+TEXTURE_HEIGHT = 256
 
 -- utility functions -- {{{
 
@@ -355,6 +355,17 @@ do
 end
 -- }}}
 
+-- UVManager {{{
+do
+	local mt={}
+	mt.__index=UVManager
+	UVManager = {
+		step=vectors.of{u=0, v=0},
+		offset=vectors.of{u=0, v=0}
+	}
+end
+-- }}}
+
 -- Parts, groups -- {{{
 HEAD=model.Head.Head
 VANILLA_PARTIAL={}
@@ -623,7 +634,10 @@ end
 
 -- }}}
 
+-- Tail animation/render code {{{
 
+
+-- }}}
 
 -- initialize values -- {{{
 function player_init()
@@ -689,6 +703,9 @@ function tick()
 	-- End of tick --
 	old_state.health=player.getHealth()
 end
+-- }}}
+
+-- Render function {{{
 -- }}}
 
 -- Enable commands -- {{{
