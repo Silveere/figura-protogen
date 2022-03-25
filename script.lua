@@ -817,6 +817,10 @@ function colorArmor(item)
 end
 -- }}}
 
+function resetAngles(part)
+	part.setRot(vectors.of{0,0,0})
+end
+
 function animateTail(val)
 	local chest_rot = 3
 	local per=2*math.pi
@@ -943,6 +947,11 @@ end
 function render(delta)
 	if aquaticTailVisible() then
 		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
+	else
+		resetAngles(model.Body)
+		resetAngles(vanilla_model.TORSO)
+		resetAngles(vanilla_model.JACKET)
+		resetAngles(armor_model.CHESTPLATE)
 	end
 end
 -- }}}
