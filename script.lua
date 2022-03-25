@@ -419,6 +419,13 @@ TAIL_LEGGINGS={
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
+TAIL_LEGGINGS_COLOR={
+	model.Body.MTail1.Leggings,
+	model.Body.MTail1.LeggingsTopTrimF,
+	model.Body.MTail1.LeggingsTopTrimB,
+	model.Body.MTail1.LeggingsTrim,
+	model.Body.MTail1.MTail2.LeggingsBottom
+}
 TAIL_BOOTS={
 	model.Body.MTail1.MTail2.MTail3.Boot,
 	model.Body.MTail1.MTail2.MTail3.LeatherBoot
@@ -490,6 +497,10 @@ do
 	--- Armor state
 	local all_armor=reduce(mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
 	PM.addPartGroupFunction(all_armor, function(last) return last and local_state.armor_enabled end)
+	-- Only show armor if equipped
+	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
+	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
+	PM.addPartGroupFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
 
 
 	-- Disable when vanilla_enabled
@@ -602,11 +613,15 @@ function syncState()
 	ping.syncState(getLocalState())
 end
 
+function pmRefresh()
+	rateLimit(1, PartsManager.refreshAll, "refreshAll")
+end
+
 function ping.syncState(tbl)
 	for k, v in pairs(tbl) do
 		local_state[k]=v
 	end
-	rateLimit(1, PartsManager.refreshAll, "refreshAll")
+	pmRefresh()
 end
 
 function ping.tPose()
@@ -684,23 +699,121 @@ function aquaticTailVisible()
 
 function updateTailVisibility()
 	local anim=player.getAnimation()
+	local water=player.isTouchingWater()
 	tail_cooldown=(tail_cooldown and tail_cooldown > 0) and tail_cooldown-1 or 0
-	if aquaticTailVisible() and (anim=="SPIN_ATTACK" or anim=="FALL_FLYING") then
+	if aquaticTailVisible() and (anim=="SPIN_ATTACK" or anim=="FALL_FLYING" or water) then
 		tail_cooldown=anim=="SPIN_ATTACK" and 60 or (tail_cooldown >= 5 and tail_cooldown or 5)
 	end
-	if old_state.aquaticTailVisible ~= aquaticTailVisible() then syncState() end
+	if old_state.aquaticTailVisible ~= aquaticTailVisible() then pmRefresh() end
 	old_state.aquaticTailVisible=aquaticTailVisible()
+end
+
+armor_color={}
+armor_color['leather'] = {131 /255 , 84  /255 , 50  /255}
+armor_glint={}
+armor_state={}
+armor_state['leggings']=false
+armor_state['boots']=false
+armor_state['leather_boots']=false
+
+do
+	local positions={}
+	positions['leather']={0, 0}
+	positions['iron']={0, 1}
+	positions['chainmail']={0, 2}
+	positions['golden']={0, 3}
+	positions['diamond']={0, 4}
+	positions['netherite']={0, 5}
+	tailuvm=UVManager:new({0, 19}, nil, positions)
 end
 
 function armor()
 
 	-- Get equipped armor, extract name from item ID
-	local leggingsItem = player.getEquipmentItem(4)
-	local bootsItem    = player.getEquipmentItem(3)
-	local leggings     = string.sub(leggingsItem.getType(), 11, -10)
-	local boots        = string.sub(bootsItem.getType(),    11, -7)
+	local leggings_item = player.getEquipmentItem(4)
+	local boots_item    = player.getEquipmentItem(3)
+	local leggings     = string.sub(leggings_item.getType(), 11, -10)
+	local boots        = string.sub(boots_item.getType(),    11, -7)
 
+	if local_state.armor_enabled then
+		-- leggings
+		armor_glint.leggings=leggings_item.hasGlint()
+		local leggings_color=colorArmor(leggings_item) or armor_color[leggings]
+		local uv=tailuvm:getUV(leggings)
+		if uv ~= nil then
+			armor_state.leggings=true
+			for k, v in pairs(TAIL_LEGGINGS) do
+				v.setUV(uv)
+			end
+			if leggings=="leather" then
+				for k, v in pairs(TAIL_LEGGINGS_COLOR) do
+					v.setColor(leggings_color)
+				end
+			else
+				for k, v in pairs(TAIL_LEGGINGS) do
+					v.setColor({1, 1, 1})
+				end
+			end
+		else
+			armor_state.leggings=false
+		end
+
+		-- boots
+		armor_glint.boots=boots_item.hasGlint()
+		local boots_color=colorArmor(boots_item) or armor_color[boots]
+		local uv_boots=tailuvm:getUV(boots)
+		if uv_boots ~= nil then
+			armor_state.boots=true
+			for k, v in pairs(TAIL_BOOTS) do
+				v.setUV(uv_boots)
+			end
+			if boots=="leather" then
+				model.Body.MTail1.MTail2.MTail3.Boot.setColor(boots_color)
+				armor_state.leather_boots=true
+			else
+				model.Body.MTail1.MTail2.MTail3.Boot.setColor({1, 1, 1})
+				armor_state.leather_boots=false
+			end
+		else
+			armor_state.boots=false
+		end
+		pmRefresh()
+	else
+		armor_glint.leggings=false
+		armor_glint.boots=false
+	end
+
+	if armor_glint.leggings then
+		for _, v in pairs(TAIL_LEGGINGS) do
+			v.setShader("Glint")
+		end
+	else
+		for _, v in pairs(TAIL_LEGGINGS) do
+			v.setShader("None")
+		end
+	end
+	if armor_glint.boots then
+		for _, v in pairs(TAIL_BOOTS) do
+			v.setShader("Glint")
+		end
+	else
+		for _, v in pairs(TAIL_BOOTS) do
+			v.setShader("None")
+		end
+	end
+
+	old_state.boots=boots
+	old_state.leggings=leggings
 end
+
+function colorArmor(item)
+	local tag = item.getTag()
+	if tag ~= nil and tag.display ~= nil and tag.display.color ~= nil then
+		return vectors.intToRGB(tag.display.color)
+	end
+end
+
+
 
 -- }}}
 
@@ -763,6 +876,7 @@ function tick()
 	end
 
 
+	armor()
 	updateTailVisibility()
 	-- End of tick --
 	old_state.health=player.getHealth()
