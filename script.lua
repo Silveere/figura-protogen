@@ -211,8 +211,13 @@ function lerp(a, b, t) return a + ((b - a) * t) end
 function rad(x) return x*math.pi/180 end
 -- }}}
 
--- master state variables and configuration (do not access within pings) -- {{{
-if client.isHost() then
+-- Master and local state variables -- {{{
+-- Local State (these are copied by pings at runtime) --
+local_state={}
+old_state={}
+-- master state variables and configuration (do not access within pings) --
+do
+	local is_host=client.isHost()
 	local defaults={
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
@@ -223,17 +228,33 @@ if client.isHost() then
 		["aquatic_enabled"]=false,
 		["aquatic_override"]=false
 	}
-
-	local savedData=data.loadAll()
-	if savedData == nil then
-		for k, v in pairs(defaults) do
-			data.save(k, v)
+	function setLocalState()
+		if is_host then
+			for k, v in pairs(skin_state) do
+				local_state[k]=v
+			end
+		else
+			for k, v in pairs(defaults) do
+				if local_state[k] == nil then local_state[k]=v end
+			end
 		end
-		savedData=data.loadAll()
+		return local_state
 	end
-	skin_state=mergeTable(
+	if is_host then
+		local savedData=data.loadAll()
+		if savedData == nil then
+			for k, v in pairs(defaults) do
+				data.save(k, v)
+			end
+			savedData=data.loadAll()
+		end
+		skin_state=mergeTable(
 		map(unstring,data.loadAll()),
 		defaults)
+	else
+		skin_state=defaults
+	end
+	setLocalState()
 end
 
 function printSettings()
@@ -255,16 +276,6 @@ function setState(name, state)
 	data.save(name, skin_state[name])
 end
 
--- Local State (these are copied by pings at runtime) --
-function getLocalState()
-	local ret={}
-	for k, v in pairs(skin_state) do
-		ret[k]=v
-	end
-	return ret
-end
-local_state={}
-old_state={}
 -- }}}
 
 -- PartsManager -- {{{
@@ -613,7 +624,7 @@ end
 
 function syncState()
 	ping.setSnoring(skin_state.snore_enabled)
-	ping.syncState(getLocalState())
+	ping.syncState(setLocalState())
 end
 
 function pmRefresh()
@@ -879,7 +890,7 @@ function player_init()
 	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
 		v.setEnabled(true)
 	end
-	local_state=getLocalState()
+	setLocalState()
 	syncState()
 end
 -- Initial configuration --
