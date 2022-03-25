@@ -225,7 +225,7 @@ do
 		["print_settings"]=false,
 		["vanilla_partial"]=false,
 		["tail_enabled"]=true,
-		["aquatic_enabled"]=false,
+		["aquatic_enabled"]=true,
 		["aquatic_override"]=false
 	}
 	function setLocalState()
