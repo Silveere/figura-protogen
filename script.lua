@@ -415,8 +415,6 @@ TAIL_BONES={
 
 do
 	local can_modify_vanilla=meta.getCanModifyVanilla()
-	local function aquaticTailVisible()
-		return local_state.aquatic_enabled and player.isUnderwater() or local_state.aquatic_override end
 
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
@@ -656,8 +654,30 @@ end
 
 -- }}}
 
--- Tail animation/render code {{{
+-- Tail stuff {{{
+function aquaticTailVisible()
+	tail_cooldown=tail_cooldown or 0
+	return local_state.aquatic_enabled and player.isTouchingWater() or local_state.aquatic_override or tail_cooldown>0 end
 
+function updateTailVisibility()
+	local anim=player.getAnimation()
+	tail_cooldown=(tail_cooldown and tail_cooldown > 0) and tail_cooldown-1 or 0
+	if aquaticTailVisible() and (anim=="SPIN_ATTACK" or anim=="FALL_FLYING") then
+		tail_cooldown=anim=="SPIN_ATTACK" and 60 or (tail_cooldown >= 5 and tail_cooldown or 5)
+	end
+	if old_state.aquaticTailVisible ~= aquaticTailVisible() then syncState() end
+	old_state.aquaticTailVisible=aquaticTailVisible()
+end
+
+function armor()
+
+	-- Get equipped armor, extract name from item ID
+	local leggingsItem = player.getEquipmentItem(4)
+	local bootsItem    = player.getEquipmentItem(3)
+	local leggings     = string.sub(leggingsItem.getType(), 11, -10)
+	local boots        = string.sub(bootsItem.getType(),    11, -7)
+
+end
 
 -- }}}
 
@@ -720,8 +740,7 @@ function tick()
 	end
 
 
-	if old_state.isUnderwater ~= player.isUnderwater() then syncState() end
-	old_state.isUnderwater=player.isUnderwater()
+	updateTailVisibility()
 	-- End of tick --
 	old_state.health=player.getHealth()
 	local_state.anim=player.getAnimation()
