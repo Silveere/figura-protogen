@@ -777,7 +777,6 @@ function armor()
 		else
 			armor_state.boots=false
 		end
-		pmRefresh()
 	else
 		armor_glint.leggings=false
 		armor_glint.boots=false
@@ -876,7 +875,15 @@ function tick()
 	end
 
 
+	-- ugly code to make the avatar fully load in figura preview
 	armor()
+	if not refreshed then
+		cooldown(1, "refreshAll")
+		PartsManager.refreshAll()
+		refreshed=true
+	else
+		pmRefresh()
+	end
 	updateTailVisibility()
 	-- End of tick --
 	old_state.health=player.getHealth()
