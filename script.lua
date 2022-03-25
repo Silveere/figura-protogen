@@ -632,7 +632,9 @@ function pmRefresh()
 end
 
 function ping.syncState(tbl)
-	local_state=tbl
+	for k, v in pairs(tbl) do
+		local_state[k]=v
+	end
 	pmRefresh()
 end
 
