@@ -828,8 +828,11 @@ end
 function animateTail(val)
 	local chest_rot = 3
 	local per=2*math.pi
-	model.Body.setRot(vectors.of{wave(val, per, 3), 0, 0})
+	-- model.Body.setRot(vectors.of{wave(val, per, 3), 0, 0})
 	armor_model.CHESTPLATE.setRot(vectors.of{-wave(val, per, rad(3)), 0, 0})
+	-- this makes it work with partial vanilla
+	vanilla_model.TORSO.setRot(vectors.of{-wave(val, per, rad(3)), 0, 0})
+	vanilla_model.JACKET.setRot(vectors.of{-wave(val, per, rad(3.25)), 0, 0})
 
 	model.Body.LeggingsTopTrimF.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
 	model.Body.LeggingsTopTrimB.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
