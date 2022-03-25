@@ -207,6 +207,8 @@ end
 --- @param period number Period of sine wave
 --- @param amp number Peak amplitude of sine wave
 function wave(x, period, amp) return math.sin((2/period)*math.pi*(x%period))*amp end
+function lerp(a, b, t) return a + ((b - a) * t) end
+function rad(x) return x*math.pi/180 end
 -- }}}
 
 -- master state variables and configuration (do not access within pings) -- {{{
@@ -262,6 +264,7 @@ function getLocalState()
 	return ret
 end
 local_state={}
+old_state={}
 -- }}}
 
 -- PartsManager -- {{{
@@ -413,16 +416,16 @@ MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.Le
 
 TAIL_LEGGINGS={
 	model.Body.LeggingsTop,
+	model.Body.LeggingsTopTrimF,
+	model.Body.LeggingsTopTrimB,
 	model.Body.MTail1.Leggings,
-	model.Body.MTail1.LeggingsTopTrimF,
-	model.Body.MTail1.LeggingsTopTrimB,
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
 TAIL_LEGGINGS_COLOR={
+	model.Body.LeggingsTopTrimF,
+	model.Body.LeggingsTopTrimB,
 	model.Body.MTail1.Leggings,
-	model.Body.MTail1.LeggingsTopTrimF,
-	model.Body.MTail1.LeggingsTopTrimB,
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
@@ -708,6 +711,7 @@ function updateTailVisibility()
 	old_state.aquaticTailVisible=aquaticTailVisible()
 end
 
+-- armor {{{
 armor_color={}
 armor_color['leather'] = {131 /255 , 84  /255 , 50  /255}
 armor_glint={}
@@ -811,6 +815,46 @@ function colorArmor(item)
 		return vectors.intToRGB(tag.display.color)
 	end
 end
+-- }}}
+
+function animateTail(val)
+	local chest_rot = 3
+	local per=2*math.pi
+	model.Body.setRot(vectors.of{wave(val, per, 3), 0, 0})
+	armor_model.CHESTPLATE.setRot(vectors.of{-wave(val, per, rad(3)), 0, 0})
+
+	model.Body.LeggingsTopTrimF.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
+	model.Body.LeggingsTopTrimB.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
+	TAIL_BONES[1].setRot(vectors.of{wave(val-1, per, 7), 0, 0})
+	TAIL_BONES[2].setRot(vectors.of{wave(val-2, per, 8), 0, 0})
+	TAIL_BONES[3].setRot(vectors.of{wave(val-3, per, 12), 0, 0})
+	TAIL_BONES[4].setRot(vectors.of{wave(val-4, per, 15), 0, 0})
+
+end
+
+anim_tick=0
+anim_velocity=0
+anim_cycle=0
+old_state.anim_cycle=0
+
+function animateTick()
+	if aquaticTailVisible() then
+		anim_tick = anim_tick + 1
+		local velocity = player.getVelocity()
+
+		if aquaticTailVisible() then
+			old_state.anim_cycle=anim_cycle
+			local player_speed = math.sqrt(velocity.x^2 + velocity.y^2 + velocity.z^2)
+			anim_cycle=anim_cycle + (player_speed*5+0.75)
+			-- bubble animation would go here but i don't have that (yet)
+		end
+
+	else
+		anim_tick=0
+		anim_velocity=0
+		anim_cycle=0
+	end
+end
 
 
 
@@ -818,7 +862,6 @@ end
 
 -- initialize values -- {{{
 function player_init()
-	old_state={}
 	old_state.health=player.getHealth()
 	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
 		v.setEnabled(true)
@@ -839,7 +882,7 @@ else
 		v.setEnabled(false)
 	end
 end
-
+anim_tick=0
 -- }}}
 
 -- Tick function -- {{{
@@ -885,6 +928,9 @@ function tick()
 		pmRefresh()
 	end
 	updateTailVisibility()
+
+	animateTick()
+
 	-- End of tick --
 	old_state.health=player.getHealth()
 	local_state.anim=player.getAnimation()
@@ -892,6 +938,11 @@ end
 -- }}}
 
 -- Render function {{{
+function render(delta)
+	if aquaticTailVisible() then
+		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
+	end
+end
 -- }}}
 
 -- Enable commands -- {{{
