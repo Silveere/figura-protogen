@@ -845,7 +845,9 @@ function animateTick()
 		if aquaticTailVisible() then
 			old_state.anim_cycle=anim_cycle
 			local player_speed = math.sqrt(velocity.x^2 + velocity.y^2 + velocity.z^2)
-			anim_cycle=anim_cycle + (player_speed*5+0.75)
+			local animation=player.getAnimation()
+			local factor=(not player.isTouchingWater() and (animation=="FALL_FLYING" or animation=="SPIN_ATTACK")) and 0.5 or 5
+			anim_cycle=anim_cycle + (player_speed*factor+0.75)
 			-- bubble animation would go here but i don't have that (yet)
 		end
 
