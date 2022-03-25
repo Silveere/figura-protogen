@@ -358,11 +358,34 @@ end
 -- UVManager {{{
 do
 	local mt={}
-	mt.__index=UVManager
 	UVManager = {
 		step=vectors.of{u=0, v=0},
-		offset=vectors.of{u=0, v=0}
+		offset=vectors.of{u=0, v=0},
+		positions={}
 	}
+	mt.__index=UVManager
+	function UVManager.new(self, step, offset, positions)
+		local t={}
+		if step ~= nil then t.step=vectors.of(step) end
+		if offset ~= nil then t.offset=vectors.of(offset) end
+		if positions ~= nil then t.positions=positions end
+		t=setmetatable(t, mt)
+		return t
+	end
+	function UVManager.getUV(self, input)
+		local vec={}
+		local stp=self.step
+		local offset=self.offset
+		if type(input) == "string" then
+			if self.positions[input] == nil then return nil end
+			vec=vectors.of(self.positions[input])
+		else
+			vec=vectors.of(input)
+		end
+		local u=offset.u+(vec.u*stp.u)
+		local v=offset.v+(vec.v*stp.v)
+		return UV{u, v}
+	end
 end
 -- }}}
 
