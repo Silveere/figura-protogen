@@ -388,6 +388,25 @@ for _, v in pairs(armor_model) do table.insert(VANILLA_GROUPS.ARMOR, v) end
 
 MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.LeftLeg, model.Body } -- RightArm LeftArm RightLeg LeftLeg Body Head
 
+TAIL_LEGGINGS={
+	model.Body.LeggingsTop,
+	model.Body.MTail1.Leggings,
+	model.Body.MTail1.LeggingsTopTrimF,
+	model.Body.MTail1.LeggingsTopTrimB,
+	model.Body.MTail1.LeggingsTrim,
+	model.Body.MTail1.MTail2.LeggingsBottom
+}
+TAIL_BOOTS={
+	model.Body.MTail1.MTail2.MTail3.Boot,
+	model.Body.MTail1.MTail2.MTail3.LeatherBoot
+}
+TAIL_BONES={
+	model.Body.MTail1,
+	model.Body.MTail1.MTail2,
+	model.Body.MTail1.MTail2.MTail3,
+	model.Body.MTail1.MTail2.MTail3.MTail4
+}
+
 -- }}}
 
 
@@ -432,7 +451,7 @@ do
 	PM.addPartGroupFunction(VANILLA_GROUPS.ARMOR, function(last) return last and local_state.armor_enabled end)
 
 	--- Custom state
-	local tail_parts=mergeTable({model.Body.TailBase}, recurseModelGroup(model.Body.MTail))
+	local tail_parts=mergeTable({model.Body.TailBase}, recurseModelGroup(model.Body.MTail1))
 	-- Disable model in vanilla partial
 	local vanilla_partial_disabled=mergeTable(MAIN_GROUPS, {model.Body.Body, model.Body.BodyLayer})
 	local vanilla_partial_enabled=mergeTable(tail_parts, {model.Head, model.Body_Tail, model.Body})
@@ -702,6 +721,7 @@ function tick()
 	old_state.isUnderwater=player.isUnderwater()
 	-- End of tick --
 	old_state.health=player.getHealth()
+	local_state.anim=player.getAnimation()
 end
 -- }}}
 
