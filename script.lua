@@ -1,8 +1,8 @@
 -- vim: set foldmethod=marker ts=4 sw=4 :
 --- Initial definitions ---
 -- Texture dimensions --
-TEXTURE_WIDTH = 128
-TEXTURE_HEIGHT = 128
+TEXTURE_WIDTH = 256
+TEXTURE_HEIGHT = 256
 
 -- utility functions -- {{{
 
@@ -201,27 +201,60 @@ function recurseModelGroup(group)
 end
 -- }}}
 
--- master state variables and configuration (do not access within pings) -- {{{
-if client.isHost() then
+-- Math {{{
+--- Sine function with period and amplitude
+--- @param x number Input value
+--- @param period number Period of sine wave
+--- @param amp number Peak amplitude of sine wave
+function wave(x, period, amp) return math.sin((2/period)*math.pi*(x%period))*amp end
+function lerp(a, b, t) return a + ((b - a) * t) end
+function rad(x) return x*math.pi/180 end
+-- }}}
+
+-- Master and local state variables -- {{{
+-- Local State (these are copied by pings at runtime) --
+local_state={}
+old_state={}
+-- master state variables and configuration (do not access within pings) --
+do
+	local is_host=client.isHost()
 	local defaults={
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
 		["snore_enabled"]=true,
 		["print_settings"]=false,
 		["vanilla_partial"]=false,
-		["aquatic_enabled"]=false
+		["tail_enabled"]=true,
+		["aquatic_enabled"]=true,
+		["aquatic_override"]=false
 	}
-
-	local savedData=data.loadAll()
-	if savedData == nil then
-		for k, v in pairs(defaults) do
-			data.save(k, v)
+	function setLocalState()
+		if is_host then
+			for k, v in pairs(skin_state) do
+				local_state[k]=v
+			end
+		else
+			for k, v in pairs(defaults) do
+				if local_state[k] == nil then local_state[k]=v end
+			end
 		end
-		savedData=data.loadAll()
+		return local_state
 	end
-	skin_state=mergeTable(
+	if is_host then
+		local savedData=data.loadAll()
+		if savedData == nil then
+			for k, v in pairs(defaults) do
+				data.save(k, v)
+			end
+			savedData=data.loadAll()
+		end
+		skin_state=mergeTable(
 		map(unstring,data.loadAll()),
 		defaults)
+	else
+		skin_state=defaults
+	end
+	setLocalState()
 end
 
 function printSettings()
@@ -243,8 +276,6 @@ function setState(name, state)
 	data.save(name, skin_state[name])
 end
 
--- Local State (these are copied by pings at runtime) --
-local_state={}
 -- }}}
 
 -- PartsManager -- {{{
@@ -338,6 +369,40 @@ do
 end
 -- }}}
 
+-- UVManager {{{
+do
+	local mt={}
+	UVManager = {
+		step=vectors.of{u=0, v=0},
+		offset=vectors.of{u=0, v=0},
+		positions={}
+	}
+	mt.__index=UVManager
+	function UVManager.new(self, step, offset, positions)
+		local t={}
+		if step ~= nil then t.step=vectors.of(step) end
+		if offset ~= nil then t.offset=vectors.of(offset) end
+		if positions ~= nil then t.positions=positions end
+		t=setmetatable(t, mt)
+		return t
+	end
+	function UVManager.getUV(self, input)
+		local vec={}
+		local stp=self.step
+		local offset=self.offset
+		if type(input) == "string" then
+			if self.positions[input] == nil then return nil end
+			vec=vectors.of(self.positions[input])
+		else
+			vec=vectors.of(input)
+		end
+		local u=offset.u+(vec.u*stp.u)
+		local v=offset.v+(vec.v*stp.v)
+		return UV{u, v}
+	end
+end
+-- }}}
+
 -- Parts, groups -- {{{
 HEAD=model.Head.Head
 VANILLA_PARTIAL={}
@@ -358,8 +423,39 @@ for _, v in pairs(VANILLA_GROUPS.INNER) do table.insert(VANILLA_GROUPS.ALL,v) en
 for _, v in pairs(VANILLA_GROUPS.OUTER) do table.insert(VANILLA_GROUPS.ALL,v) end
 for _, v in pairs(armor_model) do table.insert(VANILLA_GROUPS.ARMOR, v) end
 
-CUSTOM_GROUPS={} -- RightArm LeftArm RightLeg LeftLeg Body Head
-for _, v in pairs(model) do table.insert(CUSTOM_GROUPS, v) end
+MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.LeftLeg, model.Body } -- RightArm LeftArm RightLeg LeftLeg Body Head
+
+TAIL_LEGGINGS={
+	model.Body.LeggingsTop,
+	model.Body.LeggingsTopTrimF,
+	model.Body.LeggingsTopTrimB,
+	model.Body.MTail1.Leggings,
+	model.Body.MTail1.LeggingsTrim,
+	model.Body.MTail1.MTail2.LeggingsBottom
+}
+TAIL_LEGGINGS_COLOR={
+	model.Body.LeggingsTopTrimF,
+	model.Body.LeggingsTopTrimB,
+	model.Body.MTail1.Leggings,
+	model.Body.MTail1.LeggingsTrim,
+	model.Body.MTail1.MTail2.LeggingsBottom
+}
+TAIL_BOOTS={
+	model.Body.MTail1.MTail2.MTail3.Boot,
+	model.Body.MTail1.MTail2.MTail3.LeatherBoot
+}
+TAIL_BONES={
+	model.Body.MTail1,
+	model.Body.MTail1.MTail2,
+	model.Body.MTail1.MTail2.MTail3,
+	model.Body.MTail1.MTail2.MTail3.MTail4
+}
+REG_TAIL_BONES={
+	model.Body_Tail,
+	model.Body_Tail.Tail_L2,
+	model.Body_Tail.Tail_L2.Tail_L3,
+	model.Body_Tail.Tail_L2.Tail_L3.fin
+}
 
 -- }}}
 
@@ -368,8 +464,7 @@ for _, v in pairs(model) do table.insert(CUSTOM_GROUPS, v) end
 -- Vanilla rules
 
 do
-	local function aquaticTailVisible()
-		return local_state.aquatic_enabled and player.isUnderwater() end
+	local can_modify_vanilla=meta.getCanModifyVanilla()
 
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
@@ -378,39 +473,58 @@ do
 		return local_state.vanilla_partial
 	end
 
+	local function forceVanilla()
+		return not can_modify_vanilla or local_state.vanilla_enabled
+	end
+
 	-- eventually replace this with an instance once PartsManager becomes a class
 	local PM=PartsManager
 
 
 	--- Vanilla state
 	-- Show all in vanilla partial
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function() return
-		vanillaPartial() end)
-	-- no legs in water if tail enabled
+	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function() return vanillaPartial() end)
+	-- no cape if tail enabled (it clips)
+	PM.addPartFunction(vanilla_model.CAPE, function(last) return last and not local_state.tail_enabled end)
+	-- no legs in water if mtail enabled
 	PM.addPartGroupFunction(VANILLA_GROUPS.LEFT_LEG, function(last) return last and not aquaticTailVisible() end)
 	PM.addPartGroupFunction(VANILLA_GROUPS.RIGHT_LEG, function(last) return last and not aquaticTailVisible() end)
 	-- no vanilla head in partial vanilla
 	PM.addPartGroupFunction(VANILLA_GROUPS.HEAD, function(last)
 		return last and not vanillaPartial() end)
 	-- Always true if vanilla_enabled
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL,
-		function(last) return last or local_state.vanilla_enabled end)
+	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function(last) return last or forceVanilla() end)
 
-	--- Armor state
-	PM.addPartGroupFunction(VANILLA_GROUPS.ARMOR,
-		function(last) return local_state.armor_enabled end)
 
 	--- Custom state
+	local tail_parts=mergeTable({model.Body.TailBase}, TAIL_BONES)
 	-- Disable model in vanilla partial
-	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return not vanillaPartial() end)
-	-- no legs in water if tail enabled
-	PM.addPartFunction(model.LeftLeg, function(last) return last and not aquaticTailVisible() end)
-	PM.addPartFunction(model.RightLeg, function(last) return last and not aquaticTailVisible() end)
+	local vanilla_partial_disabled=mergeTable(MAIN_GROUPS, {model.Body.Body, model.Body.BodyLayer})
+	local vanilla_partial_enabled={model.Head, model.Body}
+	PM.addPartGroupFunction(vanilla_partial_disabled, function(last) return not vanillaPartial() end)
+	-- Enable certain parts in vanilla partial
+	PM.addPartGroupFunction(vanilla_partial_enabled, function(last) return last or vanillaPartial() end)
+	PM.addPartGroupFunction(tail_parts, function(last) return last or vanillaPartial() end)
 
-	-- Enable head in vanilla partial
-	PM.addPartFunction(model.Head, function(last) return last or vanillaPartial() end)
+	-- Enable tail setting
+	PM.addPartFunction(model.Body_Tail, function(last) return last and local_state.tail_enabled end)
+	-- no legs, regular tail in water if tail enabled
+	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail, armor_model.LEGGINGS, armor_model.BOOTS}
+	PM.addPartGroupFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
+	-- aquatic tail in water
+	PM.addPartGroupFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
+
+	--- Armor state
+	local all_armor=reduce(mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
+	PM.addPartGroupFunction(all_armor, function(last) return last and local_state.armor_enabled end)
+	-- Only show armor if equipped
+	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
+	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
+	PM.addPartGroupFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
+
+
 	-- Disable when vanilla_enabled
-	PM.addPartGroupFunction(CUSTOM_GROUPS, function(last) return last and not local_state.vanilla_enabled end)
+	PM.addPartGroupFunction(MAIN_GROUPS, function(last) return last and not forceVanilla() end)
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
@@ -464,6 +578,8 @@ action_wheel.SLOT_2.setTitle('log health')
 action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
 action_wheel.SLOT_3.setTitle('Toggle Armor')
 action_wheel.SLOT_3.setFunction(function() setArmor() end)
+action_wheel.SLOT_4.setTitle('T-Pose')
+action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
 
 -- Pings --
 --- Damage function --
@@ -514,14 +630,23 @@ end
 
 function syncState()
 	ping.setSnoring(skin_state.snore_enabled)
-	ping.syncState(skin_state)
+	ping.syncState(setLocalState())
+end
+
+function pmRefresh()
+	rateLimit(1, PartsManager.refreshAll, "refreshAll")
 end
 
 function ping.syncState(tbl)
 	for k, v in pairs(tbl) do
 		local_state[k]=v
 	end
-	rateLimit(1, PartsManager.refreshAll, "refreshAll")
+	pmRefresh()
+end
+
+function ping.tPose()
+	local_state.emote_vector=player.getPos()
+	animation.tpose.start()
 end
 -- }}}
 
@@ -587,12 +712,203 @@ end
 
 -- }}}
 
+-- Tail stuff {{{
+function aquaticTailVisible()
+	tail_cooldown=tail_cooldown or 0
+	return local_state.aquatic_enabled and (player.isTouchingWater() or player.isInLava()) or local_state.aquatic_override or tail_cooldown>0 end
 
+function updateTailVisibility()
+	local anim=player.getAnimation()
+	local water=player.isTouchingWater()
+	local lava=player.isInLava()
+	tail_cooldown=(tail_cooldown and tail_cooldown > 0) and tail_cooldown-1 or 0
+	if aquaticTailVisible() and (anim=="SLEEPING" or anim=="SPIN_ATTACK" or anim=="FALL_FLYING" or water or lava) then
+		tail_cooldown=anim=="SPIN_ATTACK" and 60 or (tail_cooldown >= 10 and tail_cooldown or 10)
+	end
+	if old_state.aquaticTailVisible ~= aquaticTailVisible() then pmRefresh() end
+	old_state.aquaticTailVisible=aquaticTailVisible()
+end
+
+-- armor {{{
+armor_color={}
+armor_color['leather'] = {131 /255 , 84  /255 , 50  /255}
+armor_glint={}
+armor_state={}
+armor_state['leggings']=false
+armor_state['boots']=false
+armor_state['leather_boots']=false
+
+do
+	local positions={}
+	positions['leather']={0, 0}
+	positions['iron']={0, 1}
+	positions['chainmail']={0, 2}
+	positions['golden']={0, 3}
+	positions['diamond']={0, 4}
+	positions['netherite']={0, 5}
+	tailuvm=UVManager:new({0, 19}, nil, positions)
+end
+
+function armor()
+
+	-- Get equipped armor, extract name from item ID
+	local leggings_item = player.getEquipmentItem(4)
+	local boots_item    = player.getEquipmentItem(3)
+	local leggings     = string.sub(leggings_item.getType(), 11, -10)
+	local boots        = string.sub(boots_item.getType(),    11, -7)
+
+	if local_state.armor_enabled then
+		if old_state.leggings ~= leggings then
+			-- leggings
+			armor_glint.leggings=leggings_item.hasGlint()
+			local leggings_color=colorArmor(leggings_item) or armor_color[leggings]
+			local uv=tailuvm:getUV(leggings)
+			if uv ~= nil then
+				armor_state.leggings=true
+				for k, v in pairs(TAIL_LEGGINGS) do
+					v.setUV(uv)
+				end
+				if leggings=="leather" then
+					for k, v in pairs(TAIL_LEGGINGS_COLOR) do
+						v.setColor(leggings_color)
+					end
+				else
+					for k, v in pairs(TAIL_LEGGINGS) do
+						v.setColor({1, 1, 1})
+					end
+				end
+			else
+				armor_state.leggings=false
+			end
+			pmRefresh()
+		end
+
+		if old_state.boots ~= boots then
+			-- boots
+			armor_glint.boots=boots_item.hasGlint()
+			local boots_color=colorArmor(boots_item) or armor_color[boots]
+			local uv_boots=tailuvm:getUV(boots)
+			if uv_boots ~= nil then
+				armor_state.boots=true
+				for k, v in pairs(TAIL_BOOTS) do
+					v.setUV(uv_boots)
+				end
+				if boots=="leather" then
+					model.Body.MTail1.MTail2.MTail3.Boot.setColor(boots_color)
+					armor_state.leather_boots=true
+				else
+					model.Body.MTail1.MTail2.MTail3.Boot.setColor({1, 1, 1})
+					armor_state.leather_boots=false
+				end
+			else
+				armor_state.boots=false
+			end
+			pmRefresh()
+		end
+	else
+		armor_glint.leggings=false
+		armor_glint.boots=false
+	end
+
+	if armor_glint.leggings then
+		for _, v in pairs(TAIL_LEGGINGS) do
+			v.setShader("Glint")
+		end
+	else
+		for _, v in pairs(TAIL_LEGGINGS) do
+			v.setShader("None")
+		end
+	end
+	if armor_glint.boots then
+		for _, v in pairs(TAIL_BOOTS) do
+			v.setShader("Glint")
+		end
+	else
+		for _, v in pairs(TAIL_BOOTS) do
+			v.setShader("None")
+		end
+	end
+
+	old_state.boots=boots
+	old_state.leggings=leggings
+end
+
+function colorArmor(item)
+	local tag = item.getTag()
+	if tag ~= nil and tag.display ~= nil and tag.display.color ~= nil then
+		return vectors.intToRGB(tag.display.color)
+	end
+end
+-- }}}
+
+function resetAngles(part)
+	part.setRot(vectors.of{0,0,0})
+end
+
+function animateMTail(val)
+	local chest_rot = 3
+	local per=2*math.pi
+	-- model.Body.setRot(vectors.of{wave(val, per, 3), 0, 0})
+	armor_model.CHESTPLATE.setRot(vectors.of{-wave(val, per, rad(3)), 0, 0})
+	-- this makes it work with partial vanilla
+	vanilla_model.TORSO.setRot(vectors.of{-wave(val, per, rad(3)), 0, 0})
+	vanilla_model.JACKET.setRot(vectors.of{-wave(val, per, rad(3.25)), 0, 0})
+
+	model.Body.LeggingsTopTrimF.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
+	model.Body.LeggingsTopTrimB.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
+	TAIL_BONES[1].setRot(vectors.of{wave(val-1, per, 7), 0, 0})
+	TAIL_BONES[2].setRot(vectors.of{wave(val-2, per, 8), 0, 0})
+	TAIL_BONES[3].setRot(vectors.of{wave(val-3, per, 12), 0, 0})
+	TAIL_BONES[4].setRot(vectors.of{wave(val-4, per, 15), 0, 0})
+end
+tail_original_rot={}
+for k, v in ipairs(REG_TAIL_BONES) do
+	tail_original_rot[k]=v.getRot()
+end
+function animateTail(val)
+	local per_y=20*4
+	local per_x=20*6
+	for k, v in ipairs(REG_TAIL_BONES) do
+		local cascade=(k-1)*12
+		REG_TAIL_BONES[k].setRot(vectors.of{tail_original_rot[k].x + wave(val-cascade, per_x, 3), wave(val-cascade, per_y, 12), tail_original_rot[k].z})
+	end
+end
+
+anim_tick=0
+anim_cycle=0
+old_state.anim_cycle=0
+
+function animateTick()
+	anim_tick = anim_tick + 1
+	if aquaticTailVisible() then
+		local velocity = player.getVelocity()
+
+		if aquaticTailVisible() then
+			old_state.anim_cycle=anim_cycle
+			local player_speed = math.sqrt(velocity.x^2 + velocity.y^2 + velocity.z^2)
+			local animation=player.getAnimation()
+			local factor=(not player.isTouchingWater() and (animation=="FALL_FLYING" or animation=="SPIN_ATTACK")) and 0.5 or 5
+			anim_cycle=anim_cycle + (player_speed*factor+0.75)
+			-- bubble animation would go here but i don't have that (yet)
+		end
+
+	else
+		old_state.anim_cycle=anim_cycle
+		anim_cycle=anim_cycle+1
+	end
+end
+
+
+
+-- }}}
 
 -- initialize values -- {{{
 function player_init()
-	old_state={}
 	old_state.health=player.getHealth()
+	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
+		v.setEnabled(true)
+	end
+	setLocalState()
 	syncState()
 end
 -- Initial configuration --
@@ -605,8 +921,7 @@ else
 		v.setEnabled(false)
 	end
 end
-vanilla_model.CAPE.setEnabled(true)
-
+anim_tick=0
 -- }}}
 
 -- Tick function -- {{{
@@ -637,10 +952,39 @@ function tick()
 		ping.oof(player.getHealth())
 	end
 
-	if old_state.isUnderwater ~= player.isUnderwater() then syncState() end
-	old_state.isUnderwater=player.isUnderwater()
+	if animation.tpose.isPlaying() and local_state.emote_vector.distanceTo(player.getPos()) >= 0.5 then
+		animation.tpose.stop()
+	end
+
+
+	-- ugly code to make the avatar fully load in figura preview
+	armor()
+	if not refreshed then
+		cooldown(1, "refreshAll")
+		PartsManager.refreshAll()
+		refreshed=true
+	end
+	updateTailVisibility()
+
+	animateTick()
+
 	-- End of tick --
 	old_state.health=player.getHealth()
+	local_state.anim=player.getAnimation()
+end
+-- }}}
+
+-- Render function {{{
+function render(delta)
+	if aquaticTailVisible() then
+		animateMTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
+	else
+		resetAngles(model.Body)
+		resetAngles(vanilla_model.TORSO)
+		resetAngles(vanilla_model.JACKET)
+		resetAngles(armor_model.CHESTPLATE)
+		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta)))
+	end
 end
 -- }}}
 
@@ -648,6 +992,7 @@ end
 chat_prefix="$"
 chat.setFiguraCommandPrefix(chat_prefix)
 function onCommand(input)
+	local pfx=chat_prefix
 	input=splitstring(input)
 	if input[1] == chat_prefix .. "vanilla" then
 		setVanilla()
