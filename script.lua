@@ -450,6 +450,12 @@ TAIL_BONES={
 	model.Body.MTail1.MTail2.MTail3,
 	model.Body.MTail1.MTail2.MTail3.MTail4
 }
+REG_TAIL_BONES={
+	model.Body_Tail,
+	model.Body_Tail.Tail_L2,
+	model.Body_Tail.Tail_L2.Tail_L3,
+	model.Body_Tail.Tail_L2.Tail_L3.fin
+}
 
 -- }}}
 
@@ -838,7 +844,7 @@ function resetAngles(part)
 	part.setRot(vectors.of{0,0,0})
 end
 
-function animateTail(val)
+function animateMTail(val)
 	local chest_rot = 3
 	local per=2*math.pi
 	-- model.Body.setRot(vectors.of{wave(val, per, 3), 0, 0})
@@ -853,17 +859,27 @@ function animateTail(val)
 	TAIL_BONES[2].setRot(vectors.of{wave(val-2, per, 8), 0, 0})
 	TAIL_BONES[3].setRot(vectors.of{wave(val-3, per, 12), 0, 0})
 	TAIL_BONES[4].setRot(vectors.of{wave(val-4, per, 15), 0, 0})
-
+end
+tail_original_rot={}
+for k, v in ipairs(REG_TAIL_BONES) do
+	tail_original_rot[k]=v.getRot()
+end
+function animateTail(val)
+	local per_y=20*4
+	local per_x=20*6
+	for k, v in ipairs(REG_TAIL_BONES) do
+		local cascade=(k-1)*12
+		REG_TAIL_BONES[k].setRot(vectors.of{tail_original_rot[k].x + wave(val-cascade, per_x, 3), wave(val-cascade, per_y, 12), tail_original_rot[k].z})
+	end
 end
 
 anim_tick=0
-anim_velocity=0
 anim_cycle=0
 old_state.anim_cycle=0
 
 function animateTick()
+	anim_tick = anim_tick + 1
 	if aquaticTailVisible() then
-		anim_tick = anim_tick + 1
 		local velocity = player.getVelocity()
 
 		if aquaticTailVisible() then
@@ -876,9 +892,8 @@ function animateTick()
 		end
 
 	else
-		anim_tick=0
-		anim_velocity=0
-		anim_cycle=0
+		old_state.anim_cycle=anim_cycle
+		anim_cycle=anim_cycle+1
 	end
 end
 
@@ -961,12 +976,13 @@ end
 -- Render function {{{
 function render(delta)
 	if aquaticTailVisible() then
-		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
+		animateMTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
 	else
 		resetAngles(model.Body)
 		resetAngles(vanilla_model.TORSO)
 		resetAngles(vanilla_model.JACKET)
 		resetAngles(armor_model.CHESTPLATE)
+		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta)))
 	end
 end
 -- }}}
