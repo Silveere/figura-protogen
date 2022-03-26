@@ -721,7 +721,7 @@ function updateTailVisibility()
 	local anim=player.getAnimation()
 	local water=player.isTouchingWater()
 	tail_cooldown=(tail_cooldown and tail_cooldown > 0) and tail_cooldown-1 or 0
-	if aquaticTailVisible() and (anim=="SPIN_ATTACK" or anim=="FALL_FLYING" or water) then
+	if aquaticTailVisible() and (anim=="SLEEPING" or anim=="SPIN_ATTACK" or anim=="FALL_FLYING" or water) then
 		tail_cooldown=anim=="SPIN_ATTACK" and 60 or (tail_cooldown >= 10 and tail_cooldown or 10)
 	end
 	if old_state.aquaticTailVisible ~= aquaticTailVisible() then pmRefresh() end
