@@ -819,7 +819,7 @@ function armor()
 	local boots        = string.sub(boots_item.getType(),    11, -7)
 
 	if local_state.armor_enabled then
-		if old_state.leggings ~= leggings then
+		if old_state.leggings ~= leggings or old_state.armor_enabled ~= local_state.armor_enabled  then
 			-- leggings
 			armor_glint.leggings=leggings_item.hasGlint()
 			local leggings_color=colorArmor(leggings_item) or armor_color[leggings]
@@ -844,7 +844,7 @@ function armor()
 			pmRefresh()
 		end
 
-		if old_state.boots ~= boots then
+		if old_state.boots ~= boots or old_state.armor_enabled ~= local_state.armor_enabled  then
 			-- boots
 			armor_glint.boots=boots_item.hasGlint()
 			local boots_color=colorArmor(boots_item) or armor_color[boots]
@@ -892,6 +892,7 @@ function armor()
 
 	old_state.boots=boots
 	old_state.leggings=leggings
+	old_state.armor_enabled=local_state.armor_enabled
 end
 
 function colorArmor(item)
