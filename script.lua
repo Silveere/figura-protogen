@@ -201,6 +201,86 @@ function recurseModelGroup(group)
 end
 -- }}}
 
+-- Timer (not mine lol) -- {{{
+do
+	local timers = {}
+	function wait(ticks,next)
+		table.insert(timers, {t=world.getTime()+ticks,n=next})
+	end
+	function tick()
+		for key,timer in pairs(timers) do
+			if world.getTime() >= timer.t then
+				timer.n()
+				table.remove(timers,key)
+			end
+		end
+	end
+end
+
+-- named timers (this one is mine but heavily based on the other) --
+-- if timer is armed twice before expiring it will only be called once) --
+do
+	local timers = {}
+	function namedWait(ticks, next, name)
+		-- main difference, this will overwrite an existing timer with
+		-- the same name
+		timers[name]={t=world.getTime()+ticks,n=next}
+	end
+	function tick()
+		for key, timer in pairs(timers) do
+			if world.getTime() >= timer.t then
+				timer.n()
+				timers[key]=nil
+			end
+		end
+	end
+end
+
+-- named cooldowns
+do
+	local timers={}
+	function cooldown(ticks, name)
+		if timers[name] == nil then
+			timers[name]={t=world.getTime()+ticks}
+			return true
+		end
+		return false
+	end
+	function tick()
+		for key, timer in pairs(timers) do
+			if world.getTime() >= timer.t then
+				timers[key]=nil
+			end
+		end
+	end
+end
+
+function rateLimit(ticks, next, name)
+	if cooldown(ticks+1, name) then
+		namedWait(ticks, next, name)
+	end
+end
+
+-- }}}
+
+-- syncState {{{
+function syncState()
+	ping.setSnoring(skin_state.snore_enabled)
+	ping.syncState(setLocalState())
+end
+
+function pmRefresh()
+	rateLimit(1, PartsManager.refreshAll, "refreshAll")
+end
+
+function ping.syncState(tbl)
+	for k, v in pairs(tbl) do
+		local_state[k]=v
+	end
+	pmRefresh()
+end
+-- }}}
+
 -- Math {{{
 --- Sine function with period and amplitude
 --- @param x number Input value
@@ -458,6 +538,66 @@ REG_TAIL_BONES={
 
 -- }}}
 
+-- Enable commands -- {{{
+chat_prefix="$"
+chat.setFiguraCommandPrefix(chat_prefix)
+function onCommand(input)
+	local pfx=chat_prefix
+	input=splitstring(input)
+	if input[1] == chat_prefix .. "vanilla" then
+		setVanilla()
+		print("Vanilla skin is now " .. (skin_state.vanilla_enabled and "enabled" or "disabled"))
+	end
+	if input[1] == chat_prefix .. "toggle_custom" then
+		for key, value in pairs(model) do
+			value.setEnabled(not value.getEnabled())
+		end
+	end
+	if input[1] == chat_prefix .. "toggle_outer" then
+		for k, v in pairs(VANILLA_GROUPS.OUTER) do
+			v.setEnabled(not v.getEnabled())
+		end
+	end
+	if input[1] == chat_prefix .. "toggle_inner" then
+		for k, v in pairs(VANILLA_GROUPS.INNER) do
+			v.setEnabled(not v.getEnabled())
+		end
+	end
+	if input[1] == chat_prefix .. "test_expression" then
+		setExpression(input[2], input[3])
+		print(input[2] .. " " .. input[3])
+	end
+	if input[1] == chat_prefix .. "snore" then
+		if input[2] == "toggle" or #input==1 then
+			setSnoring()
+			log("Snoring is now " .. (skin_state.snore_enabled and "enabled" or "disabled"))
+		end
+	end
+	if input[1] == chat_prefix .. "armor" then
+		setArmor()
+		log("Armor is now " .. (skin_state.armor_enabled and "enabled" or "disabled"))
+	end
+	if input[1] == chat_prefix .. "settings" then
+		if #input==1 then
+			printSettings()
+		elseif #input==2 then
+			log(tostring(skin_state[input[2]]))
+		elseif #input==3 then
+			if skin_state[input[2]] ~= nil then
+				setState(input[2], unstring(input[3]))
+				log(tostring(input[2]) .. " is now " .. tostring(skin_state[input[2]]))
+				syncState()
+			else
+				log(tostring(input[2]) .. ": no such setting")
+			end
+		end
+	end
+	if input[1] == chat_prefix .. "pv" then
+		setState("vanilla_partial")
+		syncState()
+	end
+end
+--}}}
 
 --  PartsManager rules {{{
 -- Vanilla rules
@@ -627,88 +767,10 @@ function setVanilla(state)
 end
 
 
-function syncState()
-	ping.setSnoring(skin_state.snore_enabled)
-	ping.syncState(setLocalState())
-end
-
-function pmRefresh()
-	rateLimit(1, PartsManager.refreshAll, "refreshAll")
-end
-
-function ping.syncState(tbl)
-	for k, v in pairs(tbl) do
-		local_state[k]=v
-	end
-	pmRefresh()
-end
-
 function ping.tPose()
 	local_state.emote_vector=player.getPos()
 	animation.tpose.start()
 end
--- }}}
-
--- Timer (not mine lol) -- {{{
-do
-	local timers = {}
-	function wait(ticks,next)
-		table.insert(timers, {t=world.getTime()+ticks,n=next})
-	end
-	function tick()
-		for key,timer in pairs(timers) do
-			if world.getTime() >= timer.t then
-				timer.n()
-				table.remove(timers,key)
-			end
-		end
-	end
-end
-
--- named timers (this one is mine but heavily based on the other) --
--- if timer is armed twice before expiring it will only be called once) --
-do
-	local timers = {}
-	function namedWait(ticks, next, name)
-		-- main difference, this will overwrite an existing timer with
-		-- the same name
-		timers[name]={t=world.getTime()+ticks,n=next}
-	end
-	function tick()
-		for key, timer in pairs(timers) do
-			if world.getTime() >= timer.t then
-				timer.n()
-				timers[key]=nil
-			end
-		end
-	end
-end
-
--- named cooldowns
-do
-	local timers={}
-	function cooldown(ticks, name)
-		if timers[name] == nil then
-			timers[name]={t=world.getTime()+ticks}
-			return true
-		end
-		return false
-	end
-	function tick()
-		for key, timer in pairs(timers) do
-			if world.getTime() >= timer.t then
-				timers[key]=nil
-			end
-		end
-	end
-end
-
-function rateLimit(ticks, next, name)
-	if cooldown(ticks+1, name) then
-		namedWait(ticks, next, name)
-	end
-end
-
 -- }}}
 
 -- Tail stuff {{{
@@ -986,64 +1048,3 @@ function render(delta)
 	end
 end
 -- }}}
-
--- Enable commands -- {{{
-chat_prefix="$"
-chat.setFiguraCommandPrefix(chat_prefix)
-function onCommand(input)
-	local pfx=chat_prefix
-	input=splitstring(input)
-	if input[1] == chat_prefix .. "vanilla" then
-		setVanilla()
-		print("Vanilla skin is now " .. (skin_state.vanilla_enabled and "enabled" or "disabled"))
-	end
-	if input[1] == chat_prefix .. "toggle_custom" then
-		for key, value in pairs(model) do
-			value.setEnabled(not value.getEnabled())
-		end
-	end
-	if input[1] == chat_prefix .. "toggle_outer" then
-		for k, v in pairs(VANILLA_GROUPS.OUTER) do
-			v.setEnabled(not v.getEnabled())
-		end
-	end
-	if input[1] == chat_prefix .. "toggle_inner" then
-		for k, v in pairs(VANILLA_GROUPS.INNER) do
-			v.setEnabled(not v.getEnabled())
-		end
-	end
-	if input[1] == chat_prefix .. "test_expression" then
-		setExpression(input[2], input[3])
-		print(input[2] .. " " .. input[3])
-	end
-	if input[1] == chat_prefix .. "snore" then
-		if input[2] == "toggle" or #input==1 then
-			setSnoring()
-			log("Snoring is now " .. (skin_state.snore_enabled and "enabled" or "disabled"))
-		end
-	end
-	if input[1] == chat_prefix .. "armor" then
-		setArmor()
-		log("Armor is now " .. (skin_state.armor_enabled and "enabled" or "disabled"))
-	end
-	if input[1] == chat_prefix .. "settings" then
-		if #input==1 then
-			printSettings()
-		elseif #input==2 then
-			log(tostring(skin_state[input[2]]))
-		elseif #input==3 then
-			if skin_state[input[2]] ~= nil then
-				setState(input[2], unstring(input[3]))
-				log(tostring(input[2]) .. " is now " .. tostring(skin_state[input[2]]))
-				syncState()
-			else
-				log(tostring(input[2]) .. ": no such setting")
-			end
-		end
-	end
-	if input[1] == chat_prefix .. "pv" then
-		setState("vanilla_partial")
-		syncState()
-	end
-end
---}}}
