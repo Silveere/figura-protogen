@@ -703,7 +703,7 @@ do
 
 	-- color/expression rules
 	function getBestColor()
-		if player.isInLava() or player.getWorldName()=="the_nether" then
+		if player.isInLava() or player.getWorldName()=="minecraft:the_nether" then
 			return COLORS.lava
 		else
 			return COLORS.neutral
