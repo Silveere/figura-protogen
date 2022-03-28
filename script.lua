@@ -482,7 +482,7 @@ do
 end
 -- }}}
 
--- Parts, groups -- {{{
+-- Parts, groups, other constants -- {{{
 HEAD=model.Head.Head
 VANILLA_PARTIAL={}
 VANILLA_GROUPS={
@@ -535,6 +535,21 @@ REG_TAIL_BONES={
 	model.Body_Tail.Tail_L2.Tail_L3,
 	model.Body_Tail.Tail_L2.Tail_L3.fin
 }
+EMISSIVES={
+	model.Body.MTail1.MTailDots1,
+	model.Body.MTail1.MTail2.MTailDots2,
+	model.Body.MTail1.MTail2.MTail3.MTailDots3,
+	model.Body.MTail1.MTail2.MTail3.MTail4.MTailDots4,
+	model.Body_Tail.TailDots1,
+	model.Body_Tail.Tail_L2.TailDots2,
+	model.Body_Tail.Tail_L2.Tail_L3.TailDots3,
+	model.Body_Tail.Tail_L2.Tail_L3.fin.TailDots4
+}
+COLORS={}
+COLORS.default=vectors.of{127/255,127/255,255/255}
+for k, v in pairs(EMISSIVES) do
+	v.setColor(COLORS.default)
+end
 
 -- }}}
 
