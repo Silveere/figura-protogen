@@ -539,7 +539,7 @@ REG_TAIL_BONES={
 	model.Body_Tail.Tail_L2.Tail_L3,
 	model.Body_Tail.Tail_L2.Tail_L3.fin
 }
-EMISSIVES={
+BODY_EMISSIVES={
 	model.Body.MTail1.MTailDots1,
 	model.Body.MTail1.MTail2.MTailDots2,
 	model.Body.MTail1.MTail2.MTail3.MTailDots3,
@@ -548,13 +548,17 @@ EMISSIVES={
 	model.Body_Tail.Tail_L2.TailDots2,
 	model.Body_Tail.Tail_L2.Tail_L3.TailDots3,
 	model.Body_Tail.Tail_L2.Tail_L3.fin.TailDots4,
-	model.Head.Face,
 	model.Head.EmDots
 }
+FACE_EMISSIVES={
+	model.Head.Face
+}
+EMISSIVES=mergeTable(BODY_EMISSIVES, FACE_EMISSIVES)
 COLORS={}
 COLORS.neutral=vectors.of{127/255,127/255,255/255}
 COLORS.hurt=   vectors.of{1, 0, 63/255}
 COLORS.lava=   vectors.of{1, 128/255, 64/255}
+COLORS["end"]="end"
 for k, v in pairs(EMISSIVES) do
 	v.setColor(COLORS.neutral)
 end
@@ -699,8 +703,10 @@ SNORES={"snore-1", "snore-2", "snore-3"}
 do
 	local expressions={}
 	expressions.neutral={0,0}
+	expressions["end"]=expressions.neutral
 	expressions.hurt={0,1}
 	local expruvm=UVManager:new({8, 8}, nil, expressions)
+	current_expression="neutral"
 
 	-- color/expression rules
 	function getBestColor()
@@ -714,28 +720,36 @@ do
 		return "neutral"
 	end
 	function setColor(col)
-		col=(col~=nil) and col or getBestColor()
-		for _, v in pairs(EMISSIVES) do
-			v.setColor(col)
+		if not lock_color then
+			col=(col~=nil) and col or getBestColor()
+			for _, v in pairs(EMISSIVES) do
+				v.setColor(col)
+				v.setShader("None")
+			end
 		end
 	end
 
 	-- Expression change code
 	function setExpression(expression)
-		FACE.setUV(expruvm:getUV(expression))
-		setColor(COLORS[expression])
+		current_expression=expression
+		FACE.setUV(expruvm:getUV(current_expression))
+		setColor(COLORS[current_expression])
 	end
 	function changeExpression(expression, ticks)
-		setExpression(expression)
+		FACE.setUV(expruvm:getUV(expression))
+		setColor(COLORS[expression])
 		namedWait(ticks, resetExpression, "resetExpression")
 	end
 	function resetExpression()
-		FACE.setUV(expruvm:getUV(getBestExpression()))
+		lock_color=false
+		FACE.setUV(expruvm:getUV(current_expression))
 		setColor(getBestColor())
 	end
 
 	function hurt()
+		lock_color=false
 		changeExpression("hurt", 10)
+		lock_color=true
 		PartsManager.refreshPart(SHATTER)
 	end
 end
@@ -756,6 +770,12 @@ action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
 
 -- Pings --
 --- Damage function --
+function ping.expr(expr)
+	local val=(expr==current_expression) and "neutral" or expr
+	setExpression(val)
+end
+
+
 function ping.oof(health) -- This is a replacement for onDamage, that function doesn't sync for some reason
 	hurt()
 end
@@ -1026,8 +1046,9 @@ function hostTick()
 end
 
 function tick()
-
-	setColor()
+	if old_state.in_lava ~= player.isInLava() then
+		setColor()
+	end
 	-- optimization, only execute these once a second --
 	if world.getTimeOfDay() % 20 == 0 then
 
@@ -1063,6 +1084,7 @@ function tick()
 
 	-- End of tick --
 	old_state.health=player.getHealth()
+	old_state.in_lava=player.isInLava()
 	local_state.anim=player.getAnimation()
 end
 -- }}}
