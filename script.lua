@@ -696,12 +696,6 @@ SNORES={"snore-1", "snore-2", "snore-3"}
 
 -- Expression change -- {{{
 do
-	function setColor(col)
-		col=(col~=nil) and col or COLORS.neutral
-		for _, v in pairs(EMISSIVES) do
-			v.setColor(col)
-		end
-	end
 	local expressions={}
 	expressions.neutral={0,0}
 	expressions.hurt={0,1}
@@ -717,6 +711,12 @@ do
 	end
 	function getBestExpression()
 		return "neutral"
+	end
+	function setColor(col)
+		col=(col~=nil) and col or getBestColor()
+		for _, v in pairs(EMISSIVES) do
+			v.setColor(col)
+		end
 	end
 
 	-- Expression change code
@@ -1025,6 +1025,8 @@ function hostTick()
 end
 
 function tick()
+
+	setColor()
 	-- optimization, only execute these once a second --
 	if world.getTimeOfDay() % 20 == 0 then
 
