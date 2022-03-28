@@ -451,12 +451,14 @@ end
 -- UVManager {{{
 do
 	local mt={}
+	--- @class UVManager
 	UVManager = {
 		step=vectors.of{u=0, v=0},
 		offset=vectors.of{u=0, v=0},
 		positions={}
 	}
 	mt.__index=UVManager
+	--- @return UVManager
 	function UVManager.new(self, step, offset, positions)
 		local t={}
 		if step ~= nil then t.step=vectors.of(step) end
@@ -484,6 +486,8 @@ end
 
 -- Parts, groups, other constants -- {{{
 HEAD=model.Head.Head
+FACE=model.Head.Face
+SHATTER=model.Head.Shatter
 VANILLA_PARTIAL={}
 VANILLA_GROUPS={
 	["HEAD"]={vanilla_model.HEAD, vanilla_model.HAT},
@@ -547,10 +551,11 @@ EMISSIVES={
 	model.Head.Face
 }
 COLORS={}
-COLORS.default=vectors.of{127/255,127/255,255/255}
+COLORS.neutral=vectors.of{127/255,127/255,255/255}
 COLORS.hurt=   vectors.of{1, 0, 63/255}
+COLORS.lava=   vectors.of{1, 168/255, 90/255}
 for k, v in pairs(EMISSIVES) do
-	v.setColor(COLORS.default)
+	v.setColor(COLORS.neutral)
 end
 
 -- }}}
@@ -662,6 +667,9 @@ do
 	PM.addPartGroupFunction(vanilla_partial_enabled, function(last) return last or vanillaPartial() end)
 	PM.addPartGroupFunction(tail_parts, function(last) return last or vanillaPartial() end)
 
+	-- Show shattered only at low health
+	PM.addPartFunction(SHATTER, function(last) return last and local_state.health <= 5 end)
+
 	-- Enable tail setting
 	PM.addPartFunction(model.Body_Tail, function(last) return last and local_state.tail_enabled end)
 	-- no legs, regular tail in water if tail enabled
@@ -688,37 +696,46 @@ SNORES={"snore-1", "snore-2", "snore-3"}
 
 -- Expression change -- {{{
 do
-	-- Values for UV mappings --
-	expr_current={damage=0, expression=0}
-	local expr_step={u=32, v=16}
-	local expr_offset={u=64, v=0}
-
-	local function getExprUV(damage, expression)
-		local u=expr_offset.u+(damage*expr_step.u)
-		local v=expr_offset.v+(expression*expr_step.v)
-		return UV{u, v}
+	function setColor(col)
+		col=(col~=nil) and col or COLORS.neutral
+		for _, v in pairs(EMISSIVES) do
+			v.setColor(col)
+		end
 	end
-	function changeExpression(_damage, _expression, ticks)
-		-- u is damage, v is expression
-		local damage = _damage
-		local expression = _expression
-		if damage == nil then
-			damage = expr_current.damage
-		end
-		if expression == nil then
-			expression = expr_current.expression
-		end
+	local expressions={}
+	expressions.neutral={0,0}
+	expressions.hurt={0,1}
+	local expruvm=UVManager:new({8, 8}, nil, expressions)
 
-		HEAD.setUV(getExprUV(damage,expression))
+	-- color/expression rules
+	function getBestColor()
+		if player.isInLava() or player.getWorldName()=="the_nether" then
+			return COLORS.lava
+		else
+			return COLORS.neutral
+		end
+	end
+	function getBestExpression()
+		return "neutral"
+	end
+
+	-- Expression change code
+	function setExpression(expression)
+		FACE.setUV(expruvm:getUV(expression))
+		setColor(COLORS[expression])
+	end
+	function changeExpression(expression, ticks)
+		setExpression(expression)
 		namedWait(ticks, resetExpression, "resetExpression")
 	end
-	function setExpression(damage, expression)
-		expr_current.damage=damage
-		expr_current.expression=expression
-		HEAD.setUV(getExprUV(damage, expression))
-	end
 	function resetExpression()
-		HEAD.setUV(getExprUV(expr_current.damage,expr_current.expression))
+		FACE.setUV(expruvm:getUV(getBestExpression()))
+		setColor(getBestColor())
+	end
+
+	function hurt()
+		changeExpression("hurt", 10)
+		PartsManager.refreshPart(SHATTER)
 	end
 end
 -- }}}
@@ -727,8 +744,7 @@ end
 action_wheel.SLOT_1.setTitle('test expression')
 action_wheel.SLOT_1.setFunction(function() ping.expressionTest() end)
 function ping.expressionTest()
-	setExpression(1,0)
-	changeExpression(nil, 1, 10)
+	changeExpression("hurt", 10)
 end
 action_wheel.SLOT_2.setTitle('log health')
 action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
@@ -740,14 +756,7 @@ action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
 -- Pings --
 --- Damage function --
 function ping.oof(health) -- This is a replacement for onDamage, that function doesn't sync for some reason
-	if health <= 5 then
-		setExpression(1,0)
-	end
-	changeExpression(nil,1,10)
-end
---- Heal function (revert expression) --
-function ping.healed(health)
-	setExpression(0,0)
+	hurt()
 end
 
 --- Toggle Armor ---
@@ -983,7 +992,8 @@ end
 
 -- initialize values -- {{{
 function player_init()
-	old_state.health=player.getHealth()
+	local_state.health=player.getHealth()
+	old_state.health=local_state.health
 	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
 		v.setEnabled(true)
 	end
@@ -1004,13 +1014,19 @@ anim_tick=0
 -- }}}
 
 -- Tick function -- {{{
+function hostTick()
+	local_state.health=player.getHealth()
+	if local_state.health ~= old_state.health then
+		if local_state.health < old_state.health then
+			ping.oof(local_state.health)
+		end
+		syncState()
+	end
+end
+
 function tick()
 	-- optimization, only execute these once a second --
 	if world.getTimeOfDay() % 20 == 0 then
-		-- if face is cracked
-		if expr_current.damage==1 and player.getHealth() > 5 then
-			ping.healed()
-		end
 
 		if player.getAnimation() == "SLEEPING" then
 			if cooldown(20*4, "snore") then
@@ -1024,12 +1040,7 @@ function tick()
 		end
 	end
 
-	-- Damage ping (onDamage doesn't work in multiplayer) --
-	if old_state.health>player.getHealth() then
-		-- debug
-		-- print(string.format('old_health=%03.2f, player.getHealth=%03.2f', old_health,player.getHealth()))
-		ping.oof(player.getHealth())
-	end
+	hostTick()
 
 	if animation.tpose.isPlaying() and local_state.emote_vector.distanceTo(player.getPos()) >= 0.5 then
 		animation.tpose.stop()
