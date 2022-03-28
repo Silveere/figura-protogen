@@ -543,10 +543,12 @@ EMISSIVES={
 	model.Body_Tail.TailDots1,
 	model.Body_Tail.Tail_L2.TailDots2,
 	model.Body_Tail.Tail_L2.Tail_L3.TailDots3,
-	model.Body_Tail.Tail_L2.Tail_L3.fin.TailDots4
+	model.Body_Tail.Tail_L2.Tail_L3.fin.TailDots4,
+	model.Head.Face
 }
 COLORS={}
 COLORS.default=vectors.of{127/255,127/255,255/255}
+COLORS.hurt=   vectors.of{1, 0, 63/255}
 for k, v in pairs(EMISSIVES) do
 	v.setColor(COLORS.default)
 end
