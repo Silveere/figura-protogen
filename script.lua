@@ -548,7 +548,8 @@ EMISSIVES={
 	model.Body_Tail.Tail_L2.TailDots2,
 	model.Body_Tail.Tail_L2.Tail_L3.TailDots3,
 	model.Body_Tail.Tail_L2.Tail_L3.fin.TailDots4,
-	model.Head.Face
+	model.Head.Face,
+	model.Head.EmDots
 }
 COLORS={}
 COLORS.neutral=vectors.of{127/255,127/255,255/255}
