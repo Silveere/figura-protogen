@@ -554,7 +554,7 @@ EMISSIVES={
 COLORS={}
 COLORS.neutral=vectors.of{127/255,127/255,255/255}
 COLORS.hurt=   vectors.of{1, 0, 63/255}
-COLORS.lava=   vectors.of{1, 168/255, 90/255}
+COLORS.lava=   vectors.of{1, 128/255, 64/255}
 for k, v in pairs(EMISSIVES) do
 	v.setColor(COLORS.neutral)
 end
