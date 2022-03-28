@@ -558,6 +558,8 @@ COLORS={}
 COLORS.neutral=vectors.of{127/255,127/255,255/255}
 COLORS.hurt=   vectors.of{1, 0, 63/255}
 COLORS.lava=   vectors.of{1, 128/255, 64/255}
+-- prev 255 160 192
+COLORS.owo=    vectors.of{1, 128/255, 160/255}
 COLORS["end"]="end"
 for k, v in pairs(EMISSIVES) do
 	v.setColor(COLORS.neutral)
@@ -705,12 +707,15 @@ do
 	expressions.neutral={0,0}
 	expressions["end"]=expressions.neutral
 	expressions.hurt={0,1}
+	expressions.owo={0,2}
 	local expruvm=UVManager:new({8, 8}, nil, expressions)
 	current_expression="neutral"
 
 	-- color/expression rules
 	function getBestColor()
-		if player.isInLava() or player.getWorldName()=="minecraft:the_nether" then
+		if current_expression=="owo" then
+			return COLORS.owo
+		elseif player.isInLava() or player.getWorldName()=="minecraft:the_nether" then
 			return COLORS.lava
 		else
 			return COLORS.neutral
@@ -767,6 +772,8 @@ action_wheel.SLOT_3.setTitle('Toggle Armor')
 action_wheel.SLOT_3.setFunction(function() setArmor() end)
 action_wheel.SLOT_4.setTitle('T-Pose')
 action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
+action_wheel.SLOT_5.setTitle('UwU')
+action_wheel.SLOT_5.setFunction(function() ping.expr("owo") end)
 
 -- Pings --
 --- Damage function --
