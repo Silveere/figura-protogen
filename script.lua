@@ -768,17 +768,20 @@ do
 	function setExpression(expression)
 		current_expression=expression
 		FACE.setUV(expruvm:getUV(current_expression))
-		setColor(COLORS[current_expression])
+		-- This expression sticks, so do not set color explicitly
+		setColor()
 	end
 	function changeExpression(expression, ticks)
 		FACE.setUV(expruvm:getUV(expression))
+		-- This one is for more explicit "flashes" such as player hurt
+		-- animations, get color explicitly
 		setColor(COLORS[expression])
 		namedWait(ticks, resetExpression, "resetExpression")
 	end
 	function resetExpression()
 		lock_color=false
 		FACE.setUV(expruvm:getUV(current_expression))
-		setColor(getBestColor())
+		setColor()
 	end
 
 	function hurt()
