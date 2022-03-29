@@ -548,7 +548,11 @@ BODY_EMISSIVES={
 	model.Body_Tail.Tail_L2.TailDots2,
 	model.Body_Tail.Tail_L2.Tail_L3.TailDots3,
 	model.Body_Tail.Tail_L2.Tail_L3.fin.TailDots4,
-	model.Head.EmDots
+	model.Head.EmDots,
+	model.LeftArm.LeftArmEm,
+	model.RightArm.RightArmEm,
+	model.LeftLeg.LeftLegEm,
+	model.RightLeg.RightLegEm
 }
 FACE_EMISSIVES={
 	model.Head.Face
@@ -1053,7 +1057,8 @@ function hostTick()
 end
 
 function tick()
-	if old_state.in_lava ~= player.isInLava() then
+	color_check=player.isInLava() ~= (player.getWorldName()=="minecraft:the_nether")
+	if old_state.color_check~=color_check then
 		setColor()
 	end
 	-- optimization, only execute these once a second --
@@ -1091,7 +1096,7 @@ function tick()
 
 	-- End of tick --
 	old_state.health=player.getHealth()
-	old_state.in_lava=player.isInLava()
+	old_state.color_check=color_check
 	local_state.anim=player.getAnimation()
 end
 -- }}}
