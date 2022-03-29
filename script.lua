@@ -201,6 +201,32 @@ function recurseModelGroup(group)
 end
 -- }}}
 
+-- Model switcher (credit to dragekk#7300) {{{
+function switch_model(path)
+    if avatar then
+        if not avatar.isLocal() then
+            local name = data.getName()
+            data.setName("avatar_switch")
+            data.save("upload", "yes")
+            data.setName(name)
+        end
+        avatar.set(path)
+    end
+end
+if avatar then
+    local name = data.getName()
+    data.setName("avatar_switch")
+    local loaded = data.load("upload")
+    if loaded == "yes" then
+        data.save("upload", "no")
+        data.setName(name)
+        avatar.uploadToBackend()
+    else
+        data.setName(name)
+    end
+end
+-- }}}
+
 -- Timer (not mine lol) -- {{{
 do
 	local timers = {}
@@ -778,6 +804,9 @@ action_wheel.SLOT_4.setTitle('T-Pose')
 action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
 action_wheel.SLOT_5.setTitle('UwU')
 action_wheel.SLOT_5.setFunction(function() ping.expr("owo") end)
+action_wheel.SLOT_8.setTitle('sssss...')
+action_wheel.SLOT_8.setItem("minecraft:creeper_head")
+action_wheel.SLOT_8.setFunction(function() switch_model('misc/Creeper') end)
 
 -- Pings --
 --- Damage function --
