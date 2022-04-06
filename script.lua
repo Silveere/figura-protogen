@@ -1063,6 +1063,7 @@ function player_init()
 		v.setEnabled(true)
 	end
 	setLocalState()
+	pmRefresh()
 	syncState()
 end
 -- Initial configuration --
@@ -1116,15 +1117,12 @@ function tick()
 	end
 
 
-	-- ugly code to make the avatar fully load in figura preview
+	-- Refresh tail armor state
 	armor()
-	if not refreshed then
-		cooldown(1, "refreshAll")
-		PartsManager.refreshAll()
-		refreshed=true
-	end
+	-- Implements tail cooldown conditions
 	updateTailVisibility()
 
+	-- Animation code resides in this function
 	animateTick()
 
 	-- Check for queued PartsManager refresh
