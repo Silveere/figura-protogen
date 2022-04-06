@@ -295,8 +295,9 @@ function syncState()
 	ping.syncState(setLocalState())
 end
 
+pm_refresh=false
 function pmRefresh()
-	rateLimit(1, PartsManager.refreshAll, "refreshAll")
+	pm_refresh=true
 end
 
 function ping.syncState(tbl)
@@ -1126,6 +1127,11 @@ function tick()
 
 	animateTick()
 
+	-- Check for queued PartsManager refresh
+	if pm_refresh then
+		PartsManager.refreshAll()
+		pm_refresh=false
+	end
 	-- End of tick --
 	old_state.health=player.getHealth()
 	old_state.color_check=color_check
