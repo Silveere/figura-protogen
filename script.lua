@@ -259,7 +259,7 @@ do
 		end
 	end
 
-	events.TICK:register(tick, "timer")
+	events.TICK:register(function() if player:exists() then tick() end end, "timer")
 end
 
 -- named timers (this one is mine but heavily based on the other) --
@@ -279,7 +279,7 @@ do
 			end
 		end
 	end
-	events.TICK:register(tick, "named_timer")
+	events.TICK:register(function() if player:exists() then tick() end end, "named_timer")
 end
 
 -- named cooldowns
@@ -299,7 +299,7 @@ do
 			end
 		end
 	end
-	events.TICK:register(tick, "cooldown")
+	events.TICK:register(function() if player:exists() then tick() end end, "cooldown")
 end
 
 function rateLimit(ticks, next, name)
@@ -1192,7 +1192,7 @@ function tick()
 	old_state.color_check=color_check
 	local_state.anim=player:getPose()
 end
-events.TICK:register(tick, "main_tick")
+events.TICK:register(function() if player:exists() then tick() end end, "main_tick")
 -- }}}
 
 -- Render function {{{
@@ -1207,5 +1207,6 @@ function render(delta)
 		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta)))
 	end
 end
-events.RENDER:register(render, "main_render")
+-- TODO this may break animation during death
+events.RENDER:register(function(delta) if player:exists() then render(delta) end end, "main_render")
 -- }}}
