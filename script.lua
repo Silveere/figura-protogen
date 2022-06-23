@@ -1050,8 +1050,8 @@ end
 function animateMTail(val)
 	local chest_rot = 3
 	local per=2*math.pi
+	model.Body:setRot(vec( wave(val, per, 3), 0, 0 ))
 	-- TODO vanilla model manipulation broke, add chestplate model
-	-- model.Body:setRot(vec( wave(val, per, 3), 0, 0 ))
 	-- armor_model.CHESTPLATE:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
 	-- this makes it work with partial vanilla
 	-- vanilla_model.BODY:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
