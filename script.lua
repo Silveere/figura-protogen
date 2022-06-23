@@ -1,5 +1,16 @@
 -- vim: set foldmethod=marker ts=4 sw=4 :
+-- TODO rewrite variables: armor_model, ping, model
 --- Initial definitions ---
+-- player model backwards compatibility
+model=models.player_model
+armor_model={
+	["BOOTS"]=vanilla_model.BOOTS,
+	["LEGGINGS"]=vanilla_model.LELGGINGS,
+	["CHESTPLATE"]=vanilla_model.CHESTPLATE,
+	["HELMET"]=vanilla_model.HELMET
+}
+-- TODO remove placeholder table when pings are implemented
+ping={}
 -- Texture dimensions --
 TEXTURE_WIDTH = 256
 TEXTURE_HEIGHT = 256
@@ -56,12 +67,13 @@ do
 end
 
 
+-- TODO: accept model part to determine texture width and height
 ---@param uv table
 function UV(uv)
-	return vectors.of({
+	return vec(
 	uv[1]/TEXTURE_WIDTH,
 	uv[2]/TEXTURE_HEIGHT
-	})
+	)
 end
 
 
@@ -100,6 +112,7 @@ function map(func, table)
 	end
 	return t
 end
+
 
 ---@param func function
 ---@param table table
@@ -190,8 +203,8 @@ end
 function recurseModelGroup(group)
 	local t={}
 	table.insert(t, group)
-	if group.getType()=="GROUP" then
-		for k, v in pairs(group.getChildren()) do
+	if group:getType()=="GROUP" then
+		for k, v in pairs(group:getChildren()) do
 			for _, v2 in pairs(recurseModelGroup(v)) do
 				table.insert(t, v2)
 			end
@@ -202,6 +215,9 @@ end
 -- }}}
 
 -- Model switcher (credit to dragekk#7300) {{{
+-- TODO: determine if needs removed for rewrite
+-- Note: use host:sendChatMessage("/figura load <whatever>")
+-- Note: no way to upload avatar yet
 function switch_model(path)
     if avatar then
         if not avatar.isLocal() then
@@ -228,12 +244,13 @@ end
 -- }}}
 
 -- Timer (not mine lol) -- {{{
+-- TODO investigate if events can replace some of this
 do
 	local timers = {}
 	function wait(ticks,next)
 		table.insert(timers, {t=world.getTime()+ticks,n=next})
 	end
-	function tick()
+	local function tick()
 		for key,timer in pairs(timers) do
 			if world.getTime() >= timer.t then
 				timer.n()
@@ -241,6 +258,8 @@ do
 			end
 		end
 	end
+
+	events.TICK:register(tick, "timer")
 end
 
 -- named timers (this one is mine but heavily based on the other) --
@@ -252,7 +271,7 @@ do
 		-- the same name
 		timers[name]={t=world.getTime()+ticks,n=next}
 	end
-	function tick()
+	local function tick()
 		for key, timer in pairs(timers) do
 			if world.getTime() >= timer.t then
 				timer.n()
@@ -260,6 +279,7 @@ do
 			end
 		end
 	end
+	events.TICK:register(tick, "named_timer")
 end
 
 -- named cooldowns
@@ -272,13 +292,14 @@ do
 		end
 		return false
 	end
-	function tick()
+	local function tick()
 		for key, timer in pairs(timers) do
 			if world.getTime() >= timer.t then
 				timers[key]=nil
 			end
 		end
 	end
+	events.TICK:register(tick, "cooldown")
 end
 
 function rateLimit(ticks, next, name)
@@ -332,7 +353,7 @@ local_state={}
 old_state={}
 -- master state variables and configuration (do not access within pings) --
 do
-	local is_host=client.isHost()
+	local is_host=host:isHost()
 	local defaults={
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
@@ -355,7 +376,9 @@ do
 		end
 		return local_state
 	end
-	if is_host then
+	-- TODO reimplement with new data API
+	-- if is_host then
+	if false then
 		local savedData=data.loadAll()
 		if savedData == nil then
 			for k, v in pairs(defaults) do
@@ -388,7 +411,8 @@ function setState(name, state)
 	else
 		skin_state[name]=state
 	end
-	data.save(name, skin_state[name])
+	-- TODO
+	-- data.save(name, skin_state[name])
 end
 
 -- }}}
@@ -461,7 +485,7 @@ do
 	--- @param part table An object managed by PartsManager.
 	function PartsManager.refreshPart(part)
 		local part_enabled=evaluatePart(part)
-		part.setEnabled(part_enabled)
+		part:setVisible(part_enabled)
 		return part_enabled
 	end
 
@@ -485,36 +509,41 @@ end
 -- }}}
 
 -- UVManager {{{
+--
+-- TODO: accept model part for built-in UV management, automatic texture size
 do
 	local mt={}
 	--- @class UVManager
 	UVManager = {
-		step=vectors.of{u=0, v=0},
-		offset=vectors.of{u=0, v=0},
+		step=vec(0,0),
+		offset=vec(0,0),
 		positions={}
 	}
 	mt.__index=UVManager
 	--- @return UVManager
+	--- @param step Vector2 A vector representing the distance between UVs
+	--- @param offset Vector2 A vector represnting the starting point for UVs, or nil
+	--- @param positions table A dictionary of names and offset vectors
 	function UVManager.new(self, step, offset, positions)
 		local t={}
-		if step ~= nil then t.step=vectors.of(step) end
-		if offset ~= nil then t.offset=vectors.of(offset) end
+		if step ~= nil then t.step=step end
+		if offset ~= nil then t.offset=offset end
 		if positions ~= nil then t.positions=positions end
 		t=setmetatable(t, mt)
 		return t
 	end
 	function UVManager.getUV(self, input)
-		local vec={}
+		local vect={}
 		local stp=self.step
 		local offset=self.offset
 		if type(input) == "string" then
 			if self.positions[input] == nil then return nil end
-			vec=vectors.of(self.positions[input])
+			vect=self.positions[input]
 		else
-			vec=vectors.of(input)
+			vect=vectors.of(input)
 		end
-		local u=offset.u+(vec.u*stp.u)
-		local v=offset.v+(vec.v*stp.v)
+		local u=offset.x+(vect.x*stp.x)
+		local v=offset.y+(vect.y*stp.y)
 		return UV{u, v}
 	end
 end
@@ -527,13 +556,13 @@ SHATTER=model.Head.Shatter
 VANILLA_PARTIAL={}
 VANILLA_GROUPS={
 	["HEAD"]={vanilla_model.HEAD, vanilla_model.HAT},
-	["TORSO"]={vanilla_model.TORSO, vanilla_model.JACKET},
+	["BODY"]={vanilla_model.BODY, vanilla_model.JACKET},
 	["LEFT_ARM"]={vanilla_model.LEFT_ARM, vanilla_model.LEFT_SLEEVE},
 	["RIGHT_ARM"]={vanilla_model.RIGHT_ARM, vanilla_model.RIGHT_SLEEVE},
 	["LEFT_LEG"]={vanilla_model.LEFT_LEG, vanilla_model.LEFT_PANTS_LEG},
 	["RIGHT_LEG"]={vanilla_model.RIGHT_LEG, vanilla_model.RIGHT_PANTS_LEG},
 	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG },
-	["INNER"]={ vanilla_model.HEAD, vanilla_model.TORSO, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
+	["INNER"]={ vanilla_model.HEAD, vanilla_model.BODY, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
 	["ALL"]={},
 	["ARMOR"]={}
 }
@@ -595,21 +624,23 @@ FACE_EMISSIVES={
 }
 EMISSIVES=mergeTable(BODY_EMISSIVES, FACE_EMISSIVES)
 COLORS={}
-COLORS.neutral=vectors.of{127/255,127/255,255/255}
-COLORS.hurt=   vectors.of{1, 0, 63/255}
-COLORS.lava=   vectors.of{1, 128/255, 64/255}
+COLORS.neutral=vec(127/255,127/255,255/255)
+COLORS.hurt=   vec(1, 0, 63/255)
+COLORS.lava=   vec(1, 128/255, 64/255)
 -- prev 255 160 192
-COLORS.owo=    vectors.of{1, 128/255, 160/255}
+COLORS.owo=    vec(1, 128/255, 160/255)
 COLORS["end"]="end"
 for k, v in pairs(EMISSIVES) do
-	v.setColor(COLORS.neutral)
+	v:setColor(COLORS.neutral)
 end
 
 -- }}}
 
 -- Enable commands -- {{{
+-- TODO a lot of these commands are deprecated, deal with them whenever
+-- TODO no chat global, onCommand is probably useless
 chat_prefix="$"
-chat.setFiguraCommandPrefix(chat_prefix)
+-- chat.setFiguraCommandPrefix(chat_prefix)
 function onCommand(input)
 	local pfx=chat_prefix
 	input=splitstring(input)
@@ -672,7 +703,9 @@ end
 -- Vanilla rules
 
 do
-	local can_modify_vanilla=meta.getCanModifyVanilla()
+	-- TODO
+	-- local can_modify_vanilla=meta.getCanModifyVanilla()
+	local can_modify_vanilla=true
 
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
@@ -744,18 +777,18 @@ SNORES={"snore-1", "snore-2", "snore-3"}
 -- Expression change -- {{{
 do
 	local expressions={}
-	expressions.neutral={0,0}
+	expressions.neutral=vec(0,0)
 	expressions["end"]=expressions.neutral
-	expressions.hurt={0,1}
-	expressions.owo={0,2}
-	local expruvm=UVManager:new({8, 8}, nil, expressions)
+	expressions.hurt=vec(0,1)
+	expressions.owo=vec(0,2)
+	local expruvm=UVManager:new(vec(8, 8), nil, expressions)
 	current_expression="neutral"
 
 	-- color/expression rules
 	function getBestColor()
 		if current_expression=="owo" then
 			return COLORS.owo
-		elseif player.isInLava() or player.getWorldName()=="minecraft:the_nether" then
+		elseif player:isInLava() or player:getDimensionName()=="minecraft:the_nether" then
 			return COLORS.lava
 		else
 			return COLORS.neutral
@@ -768,8 +801,9 @@ do
 		if not lock_color then
 			col=(col~=nil) and col or getBestColor()
 			for _, v in pairs(EMISSIVES) do
-				v.setColor(col)
-				v.setShader("None")
+				v:setColor(col)
+				-- TODO
+				-- v:setShader("None")
 			end
 		end
 	end
@@ -777,12 +811,12 @@ do
 	-- Expression change code
 	function setExpression(expression)
 		current_expression=expression
-		FACE.setUV(expruvm:getUV(current_expression))
+		FACE:setUV(expruvm:getUV(current_expression))
 		-- This expression sticks, so do not set color explicitly
 		setColor()
 	end
 	function changeExpression(expression, ticks)
-		FACE.setUV(expruvm:getUV(expression))
+		FACE:setUV(expruvm:getUV(expression))
 		-- This one is for more explicit "flashes" such as player hurt
 		-- animations, get color explicitly
 		setColor(COLORS[expression])
@@ -790,7 +824,7 @@ do
 	end
 	function resetExpression()
 		lock_color=false
-		FACE.setUV(expruvm:getUV(current_expression))
+		FACE:setUV(expruvm:getUV(current_expression))
 		setColor()
 	end
 
@@ -804,22 +838,23 @@ end
 -- }}}
 
 -- Action Wheel & Pings -- {{{
-action_wheel.SLOT_1.setTitle('test expression')
-action_wheel.SLOT_1.setFunction(function() ping.expressionTest() end)
-function ping.expressionTest()
-	changeExpression("hurt", 10)
-end
-action_wheel.SLOT_2.setTitle('log health')
-action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
-action_wheel.SLOT_3.setTitle('Toggle Armor')
-action_wheel.SLOT_3.setFunction(function() setArmor() end)
-action_wheel.SLOT_4.setTitle('T-Pose')
-action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
-action_wheel.SLOT_5.setTitle('UwU')
-action_wheel.SLOT_5.setFunction(function() ping.expr("owo") end)
-action_wheel.SLOT_8.setTitle('sssss...')
-action_wheel.SLOT_8.setItem("minecraft:creeper_head")
-action_wheel.SLOT_8.setFunction(function() switch_model('misc/Creeper') end)
+-- TODO
+-- action_wheel.SLOT_1.setTitle('test expression')
+-- action_wheel.SLOT_1.setFunction(function() ping.expressionTest() end)
+-- function ping.expressionTest()
+-- 	changeExpression("hurt", 10)
+-- end
+-- action_wheel.SLOT_2.setTitle('log health')
+-- action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
+-- action_wheel.SLOT_3.setTitle('Toggle Armor')
+-- action_wheel.SLOT_3.setFunction(function() setArmor() end)
+-- action_wheel.SLOT_4.setTitle('T-Pose')
+-- action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
+-- action_wheel.SLOT_5.setTitle('UwU')
+-- action_wheel.SLOT_5.setFunction(function() ping.expr("owo") end)
+-- action_wheel.SLOT_8.setTitle('sssss...')
+-- action_wheel.SLOT_8.setItem("minecraft:creeper_head")
+-- action_wheel.SLOT_8.setFunction(function() switch_model('misc/Creeper') end)
 
 -- Pings --
 --- Damage function --
@@ -844,8 +879,9 @@ do
 	local snore_index=1
 	function snore()
 		if snore_enabled then
-			sound.playCustomSound(SNORES[snore_index],
-				player.getPos(), vectors.of{20,1})
+			-- TODO
+			-- sound.playCustomSound(SNORES[snore_index],
+			-- 	player.getPos(), vectors.of{20,1})
 			snore_index=snore_index%#SNORES+1
 		end
 	end
@@ -868,20 +904,21 @@ end
 
 
 function ping.tPose()
-	local_state.emote_vector=player.getPos()
-	animation.tpose.start()
+	local_state.emote_vector=player:getPos()
+	-- TODO
+	-- animation.tpose.start()
 end
 -- }}}
 
 -- Tail stuff {{{
 function aquaticTailVisible()
 	tail_cooldown=tail_cooldown or 0
-	return local_state.aquatic_enabled and (player.isTouchingWater() or player.isInLava()) or local_state.aquatic_override or tail_cooldown>0 end
+	return local_state.aquatic_enabled and (player:isInWater() or player:isInLava()) or local_state.aquatic_override or tail_cooldown>0 end
 
 function updateTailVisibility()
-	local anim=player.getAnimation()
-	local water=player.isTouchingWater()
-	local lava=player.isInLava()
+	local anim=player:getPose()
+	local water=player:isInWater()
+	local lava=player:isInLava()
 	tail_cooldown=(tail_cooldown and tail_cooldown > 0) and tail_cooldown-1 or 0
 	if aquaticTailVisible() and (anim=="SLEEPING" or anim=="SPIN_ATTACK" or anim=="FALL_FLYING" or water or lava) then
 		tail_cooldown=anim=="SPIN_ATTACK" and 60 or (tail_cooldown >= 10 and tail_cooldown or 10)
@@ -901,16 +938,19 @@ armor_state['leather_boots']=false
 
 do
 	local positions={}
-	positions['leather']={0, 0}
-	positions['iron']={0, 1}
-	positions['chainmail']={0, 2}
-	positions['golden']={0, 3}
-	positions['diamond']={0, 4}
-	positions['netherite']={0, 5}
-	tailuvm=UVManager:new({0, 19}, nil, positions)
+	positions['leather']=vec(0, 0)
+	positions['iron']=vec(0, 1)
+	positions['chainmail']=vec(0, 2)
+	positions['golden']=vec(0, 3)
+	positions['diamond']=vec(0, 4)
+	positions['netherite']=vec(0, 5)
+	tailuvm=UVManager:new(vec(0, 19), nil, positions)
 end
 
+-- TODO fix code after optimization in prewrite
 function armor()
+	if true then return nil end
+	-- ^ hacky way to disable a function without uncommenting the entire thing to not break git vcs
 
 	-- Get equipped armor, extract name from item ID
 	local leggings_item = player.getEquipmentItem(4)
@@ -996,7 +1036,7 @@ function armor()
 end
 
 function colorArmor(item)
-	local tag = item.getTag()
+	local tag = item.tag
 	if tag ~= nil and tag.display ~= nil and tag.display.color ~= nil then
 		return vectors.intToRGB(tag.display.color)
 	end
@@ -1004,35 +1044,36 @@ end
 -- }}}
 
 function resetAngles(part)
-	part.setRot(vectors.of{0,0,0})
+	part:setRot(vec(0,0,0))
 end
 
 function animateMTail(val)
 	local chest_rot = 3
 	local per=2*math.pi
-	-- model.Body.setRot(vectors.of{wave(val, per, 3), 0, 0})
-	armor_model.CHESTPLATE.setRot(vectors.of{-wave(val, per, math.rad(3)), 0, 0})
+	-- TODO vanilla model manipulation broke, add chestplate model
+	-- model.Body:setRot(vec( wave(val, per, 3), 0, 0 ))
+	-- armor_model.CHESTPLATE:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
 	-- this makes it work with partial vanilla
-	vanilla_model.TORSO.setRot(vectors.of{-wave(val, per, math.rad(3)), 0, 0})
-	vanilla_model.JACKET.setRot(vectors.of{-wave(val, per, math.rad(3)), 0, 0})
+	-- vanilla_model.BODY:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
+	-- vanilla_model.JACKET:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
 
-	model.Body.LeggingsTopTrimF.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
-	model.Body.LeggingsTopTrimB.setRot(vectors.of{wave(val-1, per, 4), 0, 0})
-	TAIL_BONES[1].setRot(vectors.of{wave(val-1, per, 7), 0, 0})
-	TAIL_BONES[2].setRot(vectors.of{wave(val-2, per, 8), 0, 0})
-	TAIL_BONES[3].setRot(vectors.of{wave(val-3, per, 12), 0, 0})
-	TAIL_BONES[4].setRot(vectors.of{wave(val-4, per, 15), 0, 0})
+	model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, per, 4), 0, 0 ))
+	model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, per, 4), 0, 0 ))
+	TAIL_BONES[1]:setRot(vec( wave(val-1, per, 7), 0, 0 ))
+	TAIL_BONES[2]:setRot(vec( wave(val-2, per, 8), 0, 0 ))
+	TAIL_BONES[3]:setRot(vec( wave(val-3, per, 12), 0, 0 ))
+	TAIL_BONES[4]:setRot(vec( wave(val-4, per, 15), 0, 0 ))
 end
 tail_original_rot={}
 for k, v in ipairs(REG_TAIL_BONES) do
-	tail_original_rot[k]=v.getRot()
+	tail_original_rot[k]=v:getRot()
 end
 function animateTail(val)
 	local per_y=20*4
 	local per_x=20*6
 	for k, v in ipairs(REG_TAIL_BONES) do
 		local cascade=(k-1)*12
-		REG_TAIL_BONES[k].setRot(vectors.of{tail_original_rot[k].x + wave(val-cascade, per_x, 3), wave(val-cascade, per_y, 12), tail_original_rot[k].z})
+		REG_TAIL_BONES[k]:setRot(vec( tail_original_rot[k].x + wave(val-cascade, per_x, 3), wave(val-cascade, per_y, 12), tail_original_rot[k].z ))
 	end
 end
 
@@ -1043,13 +1084,13 @@ old_state.anim_cycle=0
 function animateTick()
 	anim_tick = anim_tick + 1
 	if aquaticTailVisible() then
-		local velocity = player.getVelocity()
+		local velocity = player:getVelocity()
 
 		if aquaticTailVisible() then
 			old_state.anim_cycle=anim_cycle
 			local player_speed = math.sqrt(velocity.x^2 + velocity.y^2 + velocity.z^2)
-			local animation=player.getAnimation()
-			local factor=(not player.isTouchingWater() and (animation=="FALL_FLYING" or animation=="SPIN_ATTACK")) and 0.5 or 5
+			local animation=player:getPose()
+			local factor=(not player:isInWater() and (animation=="FALL_FLYING" or animation=="SPIN_ATTACK")) and 0.5 or 5
 			anim_cycle=anim_cycle + (player_speed*factor+0.75)
 			-- bubble animation would go here but i don't have that (yet)
 		end
@@ -1066,23 +1107,32 @@ end
 
 -- initialize values -- {{{
 function player_init()
-	local_state.health=player.getHealth()
+	local_state.health=player:getHealth()
 	old_state.health=local_state.health
-	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
-		v.setEnabled(true)
+	-- TODO possibly reconsider if this should be redone
+	-- actually it's probably fine, it's jsut here because i forget visibility settings
+	local all_parts=recurseModelGroup(model)
+
+	for k, v in pairs(all_parts) do
+		v:resetVisible(true)
 	end
 	setLocalState()
 	pmRefresh()
 	syncState()
 end
+
+events:runOnce(function() return player:exists() end, player_init)
+
 -- Initial configuration --
-if meta.getCanModifyVanilla() then
+-- TODO x2 fix below, this entire block may not be needed with PartsManager
+-- if meta.getCanModifyVanilla() then
+if true then
 	for key, value in pairs(vanilla_model) do
-		value.setEnabled(false)
+		value:setVisible(false)
 	end
 else
 	for _, v in pairs(model) do
-		v.setEnabled(false)
+		v:setVisible(false)
 	end
 end
 anim_tick=0
@@ -1090,7 +1140,7 @@ anim_tick=0
 
 -- Tick function -- {{{
 function hostTick()
-	local_state.health=player.getHealth()
+	local_state.health=player:getHealth()
 	if local_state.health ~= old_state.health then
 		if local_state.health < old_state.health then
 			ping.oof(local_state.health)
@@ -1100,14 +1150,14 @@ function hostTick()
 end
 
 function tick()
-	color_check=player.isInLava() ~= (player.getWorldName()=="minecraft:the_nether")
+	color_check=player:isInLava() ~= (player:getDimensionName()=="minecraft:the_nether")
 	if old_state.color_check~=color_check then
 		setColor()
 	end
 	-- optimization, only execute these once a second --
 	if world.getTimeOfDay() % 20 == 0 then
 
-		if player.getAnimation() == "SLEEPING" then
+		if player:getPose() == "SLEEPING" then
 			if cooldown(20*4, "snore") then
 				snore()
 			end
@@ -1121,9 +1171,10 @@ function tick()
 
 	hostTick()
 
-	if animation.tpose.isPlaying() and local_state.emote_vector.distanceTo(player.getPos()) >= 0.5 then
-		animation.tpose.stop()
-	end
+	-- TODO
+	-- if animation.tpose.isPlaying() and local_state.emote_vector.distanceTo(player.getPos()) >= 0.5 then
+	-- 	animation.tpose.stop()
+	-- end
 
 
 	-- Refresh tail armor state
@@ -1137,10 +1188,11 @@ function tick()
 	-- Check for queued PartsManager refresh
 	doPmRefresh()
 	-- End of tick --
-	old_state.health=player.getHealth()
+	old_state.health=player:getHealth()
 	old_state.color_check=color_check
-	local_state.anim=player.getAnimation()
+	local_state.anim=player:getPose()
 end
+events.TICK:register(tick, "main_tick")
 -- }}}
 
 -- Render function {{{
@@ -1149,10 +1201,11 @@ function render(delta)
 		animateMTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
 	else
 		resetAngles(model.Body)
-		resetAngles(vanilla_model.TORSO)
-		resetAngles(vanilla_model.JACKET)
-		resetAngles(armor_model.CHESTPLATE)
+		-- resetAngles(vanilla_model.BODY)
+		-- resetAngles(vanilla_model.JACKET)
+		-- resetAngles(armor_model.CHESTPLATE)
 		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta)))
 	end
 end
+events.RENDER:register(render, "main_render")
 -- }}}
