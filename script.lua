@@ -517,21 +517,36 @@ do
 	UVManager = {
 		step=vec(0,0),
 		offset=vec(0,0),
-		positions={}
+		positions={},
+		part=nil,
+		dimensions=nil
 	}
 	mt.__index=UVManager
 	--- @return UVManager
 	--- @param step Vector2 A vector representing the distance between UVs
 	--- @param offset Vector2 A vector represnting the starting point for UVs, or nil
 	--- @param positions table A dictionary of names and offset vectors
-	function UVManager.new(self, step, offset, positions)
+	--- @param part ModelPart Model part to manage
+	function UVManager.new(self, step, offset, positions, part)
 		local t={}
 		if step ~= nil then t.step=step end
 		if offset ~= nil then t.offset=offset end
 		if positions ~= nil then t.positions=positions end
+
+		if part ~= nil then
+			UVManager.setPart(t, part)
+		end
+
 		t=setmetatable(t, mt)
 		return t
 	end
+
+	--- @param part ModelPart Model part to manage
+	function UVManager.setPart(self, part)
+		self.part=part
+		self.dimensions=part:getTextureSize()
+	end
+
 	function UVManager.getUV(self, input)
 		local vect={}
 		local stp=self.step
@@ -544,7 +559,18 @@ do
 		end
 		local u=offset.x+(vect.x*stp.x)
 		local v=offset.y+(vect.y*stp.y)
-		return UV{u, v}
+		if self.dimensions ~= nil then
+			-- TODO override for my specific texture, replace this with matrix stuff
+			-- (get rid of division once you figure out how setUVMatrix works)
+			return vec(u/(self.dimensions.x/2), v/(self.dimensions.y/2))
+		else
+			return UV{u, v}
+		end
+	end
+
+	function UVManager.setUV(self, input)
+		if self.part == nil then return false end
+		self.part:setUV(self:getUV(input))
 	end
 end
 -- }}}
@@ -781,7 +807,7 @@ do
 	expressions["end"]=expressions.neutral
 	expressions.hurt=vec(0,1)
 	expressions.owo=vec(0,2)
-	local expruvm=UVManager:new(vec(8, 8), nil, expressions)
+	local expruvm=UVManager:new(vec(8, 8), nil, expressions, FACE)
 	current_expression="neutral"
 
 	-- color/expression rules
@@ -811,12 +837,12 @@ do
 	-- Expression change code
 	function setExpression(expression)
 		current_expression=expression
-		FACE:setUV(expruvm:getUV(current_expression))
+		expruvm:setUV(current_expression)
 		-- This expression sticks, so do not set color explicitly
 		setColor()
 	end
 	function changeExpression(expression, ticks)
-		FACE:setUV(expruvm:getUV(expression))
+		expruvm:setUV(expression)
 		-- This one is for more explicit "flashes" such as player hurt
 		-- animations, get color explicitly
 		setColor(COLORS[expression])
@@ -824,7 +850,7 @@ do
 	end
 	function resetExpression()
 		lock_color=false
-		FACE:setUV(expruvm:getUV(current_expression))
+		expruvm:setUV(current_expression)
 		setColor()
 	end
 
