@@ -395,7 +395,7 @@ do
 
 	--- ensure part is initialized
 	local function initPart(part)
-		local part_key=tostring(part)
+		local part_key=part
 		if pm[part_key] == nil then
 			pm[part_key]={}
 		end
@@ -413,7 +413,7 @@ do
 	--- @param init? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
 	function PartsManager.addPartFunction(part, func, init)
 		initPart(part)
-		local part_key=tostring(part)
+		local part_key=part
 		if init ~= nil then
 			pm[part_key].init=init
 		end
@@ -426,7 +426,7 @@ do
 	function PartsManager.setInitialValue(part, init)
 		assert(init~=nil)
 		initPart(part)
-		local part_key=tostring(part)
+		local part_key=part
 		pm[part_key].init=init
 	end
 
@@ -443,7 +443,7 @@ do
 	--- Evaluate a part's chain to determine if it should be visible.
 	--- @param part table An object managed by PartsManager.
 	function PartsManager.evaluatePart(part)
-		local part_key=tostring(part)
+		local part_key=part
 		assert(pm[part_key] ~= nil)
 
 		local evalFunc=function(x, y) return y(x) end
