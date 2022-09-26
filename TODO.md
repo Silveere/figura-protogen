@@ -19,4 +19,5 @@
 	- [ ] PartsManager
 	- [ ] UVManager
 	- [ ] utility functions
-- [ ] cleanup tick functions, timers - [ ] cleanup armor code to make less redundant
+- [ ] cleanup tick functions, timers
+- [ ] cleanup armor code to make less redundant
