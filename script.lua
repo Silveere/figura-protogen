@@ -214,35 +214,6 @@ function recurseModelGroup(group)
 end
 -- }}}
 
--- Model switcher (credit to dragekk#7300) {{{
--- TODO: determine if needs removed for rewrite
--- Note: use host:sendChatMessage("/figura load <whatever>")
--- Note: no way to upload avatar yet
-function switch_model(path)
-    if avatar then
-        if not avatar.isLocal() then
-            local name = data.getName()
-            data.setName("avatar_switch")
-            data.save("upload", "yes")
-            data.setName(name)
-        end
-        avatar.set(path)
-    end
-end
-if avatar then
-    local name = data.getName()
-    data.setName("avatar_switch")
-    local loaded = data.load("upload")
-    if loaded == "yes" then
-        data.save("upload", "no")
-        data.setName(name)
-        avatar.uploadToBackend()
-    else
-        data.setName(name)
-    end
-end
--- }}}
-
 -- Timer (not mine lol) -- {{{
 -- TODO investigate if events can replace some of this
 do
@@ -259,7 +230,7 @@ do
 		end
 	end
 
-	events.TICK:register(function() if player:exists() then tick() end end, "timer")
+	events.TICK:register(function() if player then tick() end end, "timer")
 end
 
 -- named timers (this one is mine but heavily based on the other) --
@@ -279,7 +250,7 @@ do
 			end
 		end
 	end
-	events.TICK:register(function() if player:exists() then tick() end end, "named_timer")
+	events.TICK:register(function() if player then tick() end end, "named_timer")
 end
 
 -- named cooldowns
@@ -299,7 +270,7 @@ do
 			end
 		end
 	end
-	events.TICK:register(function() if player:exists() then tick() end end, "cooldown")
+	events.TICK:register(function() if player then tick() end end, "cooldown")
 end
 
 function rateLimit(ticks, next, name)
@@ -730,8 +701,7 @@ end
 
 do
 	-- TODO
-	-- local can_modify_vanilla=meta.getCanModifyVanilla()
-	local can_modify_vanilla=true
+	local can_modify_vanilla=avatar.canEditVanillaModel
 
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
@@ -1140,26 +1110,22 @@ function player_init()
 	local all_parts=recurseModelGroup(model)
 
 	for k, v in pairs(all_parts) do
-		v:resetVisible(true)
+		v:setVisible(nil)
 	end
 	setLocalState()
 	pmRefresh()
 	syncState()
+	events.ENTITY_INIT:remove("player_init")
 end
 
-events:runOnce(function() return player:exists() end, player_init)
+events.ENTITY_INIT:register(function() return player_init() end, "player_init")
 
 -- Initial configuration --
 -- TODO x2 fix below, this entire block may not be needed with PartsManager
--- if meta.getCanModifyVanilla() then
-if true then
-	for key, value in pairs(vanilla_model) do
-		value:setVisible(false)
-	end
+if avatar.canEditVanillaModel then
+	vanilla_model.PLAYER:setVisible(false)
 else
-	for _, v in pairs(model) do
-		v:setVisible(false)
-	end
+	model:setVisible(false)
 end
 anim_tick=0
 -- }}}
@@ -1218,7 +1184,7 @@ function tick()
 	old_state.color_check=color_check
 	local_state.anim=player:getPose()
 end
-events.TICK:register(function() if player:exists() then tick() end end, "main_tick")
+events.TICK:register(function() if player then tick() end end, "main_tick")
 -- }}}
 
 -- Render function {{{
@@ -1234,5 +1200,5 @@ function render(delta)
 	end
 end
 -- TODO this may break animation during death
-events.RENDER:register(function(delta) if player:exists() then render(delta) end end, "main_render")
+events.RENDER:register(function(delta) if player then render(delta) end end, "main_render")
 -- }}}
