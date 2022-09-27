@@ -835,19 +835,31 @@ end
 
 -- Action Wheel & Pings -- {{{
 -- TODO
--- action_wheel.SLOT_1.setTitle('test expression')
--- action_wheel.SLOT_1.setFunction(function() ping.expressionTest() end)
--- function ping.expressionTest()
--- 	changeExpression("hurt", 10)
--- end
--- action_wheel.SLOT_2.setTitle('log health')
--- action_wheel.SLOT_2.setFunction(function() print(player.getHealth()) end)
--- action_wheel.SLOT_3.setTitle('Toggle Armor')
--- action_wheel.SLOT_3.setFunction(function() setArmor() end)
--- action_wheel.SLOT_4.setTitle('T-Pose')
--- action_wheel.SLOT_4.setFunction(function() ping.tPose() end)
--- action_wheel.SLOT_5.setTitle('UwU')
--- action_wheel.SLOT_5.setFunction(function() ping.expr("owo") end)
+do
+	wheel={}
+	local wheel_index=1
+	function wheelScroll(change)
+		wheel_index=((wheel_index-1)+change)%#wheel+1
+		action_wheel:setPage(wheel[wheel_index])
+		print("page: " .. wheel_index)
+	end
+
+	wheel[1]=action_wheel:createPage()
+
+	action_wheel:setPage(wheel[1])
+	action_wheel.scroll=wheelScroll
+end
+
+
+
+wheel[1]:newAction():title('test expression'):onLeftClick(function() ping.expressionTest() end)
+function ping.expressionTest()
+	changeExpression("hurt", 10)
+end
+wheel[1]:newAction():title('log health'):onLeftClick(function() print(player:getHealth()) end)
+wheel[1]:newAction():title('Toggle Armor'):onLeftClick(function() setArmor() end)
+wheel[1]:newAction():title('T-Pose'):onLeftClick(function() ping.tPose() end)
+wheel[1]:newAction():title('UwU'):onLeftClick(function() ping.expr("owo") end)
 -- action_wheel.SLOT_8.setTitle('sssss...')
 -- action_wheel.SLOT_8.setItem("minecraft:creeper_head")
 -- action_wheel.SLOT_8.setFunction(function() switch_model('misc/Creeper') end)
