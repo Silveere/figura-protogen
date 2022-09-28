@@ -633,76 +633,11 @@ end
 
 -- }}}
 
--- Enable commands -- {{{
--- TODO a lot of these commands are deprecated, deal with them whenever
--- TODO no chat global, onCommand is probably useless
-chat_prefix="$"
--- chat.setFiguraCommandPrefix(chat_prefix)
-function onCommand(input)
-	local pfx=chat_prefix
-	input=splitstring(input)
-	if input[1] == chat_prefix .. "vanilla" then
-		setVanilla()
-		print("Vanilla skin is now " .. (skin_state.vanilla_enabled and "enabled" or "disabled"))
-	end
-	if input[1] == chat_prefix .. "toggle_custom" then
-		for key, value in pairs(model) do
-			value.setEnabled(not value.getEnabled())
-		end
-	end
-	if input[1] == chat_prefix .. "toggle_outer" then
-		for k, v in pairs(VANILLA_GROUPS.OUTER) do
-			v.setEnabled(not v.getEnabled())
-		end
-	end
-	if input[1] == chat_prefix .. "toggle_inner" then
-		for k, v in pairs(VANILLA_GROUPS.INNER) do
-			v.setEnabled(not v.getEnabled())
-		end
-	end
-	if input[1] == chat_prefix .. "test_expression" then
-		setExpression(input[2], input[3])
-		print(input[2] .. " " .. input[3])
-	end
-	if input[1] == chat_prefix .. "snore" then
-		if input[2] == "toggle" or #input==1 then
-			setSnoring()
-			log("Snoring is now " .. (skin_state.snore_enabled and "enabled" or "disabled"))
-		end
-	end
-	if input[1] == chat_prefix .. "armor" then
-		setArmor()
-		log("Armor is now " .. (skin_state.armor_enabled and "enabled" or "disabled"))
-	end
-	if input[1] == chat_prefix .. "settings" then
-		if #input==1 then
-			printSettings()
-		elseif #input==2 then
-			log(tostring(skin_state[input[2]]))
-		elseif #input==3 then
-			if skin_state[input[2]] ~= nil then
-				setState(input[2], unstring(input[3]))
-				log(tostring(input[2]) .. " is now " .. tostring(skin_state[input[2]]))
-				syncState()
-			else
-				log(tostring(input[2]) .. ": no such setting")
-			end
-		end
-	end
-	if input[1] == chat_prefix .. "pv" then
-		setState("vanilla_partial")
-		syncState()
-	end
-end
---}}}
-
 --  PartsManager rules {{{
 -- Vanilla rules
 
 do
 	-- TODO
-	local can_modify_vanilla=avatar.canEditVanillaModel
-
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
 			return false
