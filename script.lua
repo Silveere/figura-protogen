@@ -638,6 +638,8 @@ end
 
 do
 	-- TODO
+	local can_modify_vanilla=avatar.canEditVanillaModel
+
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
 			return false
