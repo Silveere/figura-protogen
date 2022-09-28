@@ -639,7 +639,9 @@ end
 
 do
 	-- TODO
-	local can_modify_vanilla=avatar.canEditVanillaModel
+	function getVanillaVisible()
+		return (not avatar:canEditVanillaModel()) or vanilla_model.PLAYER:getVisible()
+	end
 
 	local function vanillaPartial()
 		if local_state.vanilla_enabled then
@@ -649,7 +651,8 @@ do
 	end
 
 	local function forceVanilla()
-		return not can_modify_vanilla or local_state.vanilla_enabled
+		print(vanilla_model.PLAYER:getVisible())
+		return not avatar:canEditVanillaModel() or local_state.vanilla_enabled or vanilla_model.PLAYER:getVisible()
 	end
 
 	-- eventually replace this with an instance once PartsManager becomes a class
@@ -657,29 +660,16 @@ do
 
 
 	--- Vanilla state
-	-- Show all in vanilla partial
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function() return vanillaPartial() end)
 	-- no cape if tail enabled (it clips)
 	PM.addPartFunction(vanilla_model.CAPE, function(last) return last and not local_state.tail_enabled end)
-	-- no legs in water if mtail enabled
-	PM.addPartGroupFunction(VANILLA_GROUPS.LEFT_LEG, function(last) return last and not aquaticTailVisible() end)
-	PM.addPartGroupFunction(VANILLA_GROUPS.RIGHT_LEG, function(last) return last and not aquaticTailVisible() end)
-	-- no vanilla head in partial vanilla
-	PM.addPartGroupFunction(VANILLA_GROUPS.HEAD, function(last)
-		return last and not vanillaPartial() end)
-	-- Always true if vanilla_enabled
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function(last) return last or forceVanilla() end)
-
 
 	--- Custom state
-	local tail_parts=mergeTable({model.Body.TailBase}, TAIL_BONES)
-	-- Disable model in vanilla partial
-	local vanilla_partial_disabled=mergeTable(MAIN_GROUPS, {model.Body.Body, model.Body.BodyLayer})
-	local vanilla_partial_enabled={model.Head, model.Body}
-	PM.addPartGroupFunction(vanilla_partial_disabled, function(last) return not vanillaPartial() end)
-	-- Enable certain parts in vanilla partial
-	PM.addPartGroupFunction(vanilla_partial_enabled, function(last) return last or vanillaPartial() end)
-	PM.addPartGroupFunction(tail_parts, function(last) return last or vanillaPartial() end)
+	-- local tail_parts=mergeTable({model.Body.TailBase}, TAIL_BONES)
+	local tail_parts={model.Body.MTail1, model.Body.TailBase}
+	
+	-- TODO: old vanilla_partial groups, use these for texture swap
+	-- local vanilla_partial_disabled=mergeTable(MAIN_GROUPS, {model.Body.Body, model.Body.BodyLayer})
+	-- local vanilla_partial_enabled={model.Head, model.Body}
 
 	-- Show shattered only at low health
 	PM.addPartFunction(SHATTER, function(last) return last and local_state.health <= 5 end)
@@ -702,7 +692,7 @@ do
 
 
 	-- Disable when vanilla_enabled
-	PM.addPartGroupFunction(MAIN_GROUPS, function(last) return last and not forceVanilla() end)
+	PM.addPartGroupFunction(MAIN_GROUPS, function(last) return last and not getVanillaVisible() end)
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
@@ -859,7 +849,7 @@ end
 -- Tail stuff {{{
 function aquaticTailVisible()
 	tail_cooldown=tail_cooldown or 0
-	return local_state.aquatic_enabled and (player:isInWater() or player:isInLava()) or local_state.aquatic_override or tail_cooldown>0 end
+	return (local_state.aquatic_enabled and (player:isInWater() or player:isInLava()) or local_state.aquatic_override or tail_cooldown>0) and not getVanillaVisible() end
 
 function updateTailVisibility()
 	local anim=player:getPose()
@@ -1057,11 +1047,11 @@ function player_init()
 	old_state.health=local_state.health
 	-- TODO possibly reconsider if this should be redone
 	-- actually it's probably fine, it's jsut here because i forget visibility settings
-	local all_parts=recurseModelGroup(model)
+	-- local all_parts=recurseModelGroup(model)
 
-	for k, v in pairs(all_parts) do
-		v:setVisible(nil)
-	end
+	-- for k, v in pairs(all_parts) do
+	-- 	v:setVisible(nil)
+	-- end
 	setLocalState()
 	pmRefresh()
 	syncState()
@@ -1072,7 +1062,7 @@ events.ENTITY_INIT:register(function() return player_init() end, "player_init")
 
 -- Initial configuration --
 -- TODO x2 fix below, this entire block may not be needed with PartsManager
-if avatar.canEditVanillaModel then
+if avatar:canEditVanillaModel() then
 	vanilla_model.PLAYER:setVisible(false)
 else
 	model:setVisible(false)

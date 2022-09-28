@@ -15,7 +15,7 @@
 ## Cleanup
 - [ ] rework appropriate action wheel items as ToggleAction instead of ClickAction
 - [ ] reimplement partial vanilla as texture swap
-	- [ ] remove partial_vanilla stuff from PartsManager
+	- [x] remove partial_vanilla stuff from PartsManager
 	- [ ] fix UVManager with matrices or something
 	- [ ] add swap to skin texture
 - [ ] split off large snippets of code into separate files
