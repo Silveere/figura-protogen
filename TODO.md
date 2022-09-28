@@ -14,8 +14,10 @@
 
 ## Cleanup
 - [ ] rework appropriate action wheel items as ToggleAction instead of ClickAction
-- [ ] remove partial vanilla support, completely broken with inability to manipulate vanilla parts
+- [ ] reimplement partial vanilla as texture swap
 	- [ ] remove partial_vanilla stuff from PartsManager
+	- [ ] fix UVManager with matrices or something
+	- [ ] add swap to skin texture
 - [ ] split off large snippets of code into separate files
 	- [ ] PartsManager
 	- [ ] UVManager
