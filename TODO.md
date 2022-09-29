@@ -6,6 +6,7 @@
 
 ## Rewrite
 - [ ] fix pings
+- [ ] fix data api
 - [ ] reimplement avatar settings
 - [ ] fix sound
 - [ ] fix Blockbench animations
