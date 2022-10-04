@@ -193,7 +193,12 @@ function mergeTable(tb1, tb2)
 end
 
 function debugPrint(var)
-	print(dumpTable(var))
+	print(var)
+	return var
+end
+
+function debugPrintTable(var)
+	printTable(var)
 	return var
 end
 
