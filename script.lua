@@ -703,6 +703,36 @@ end
 SNORES={"snore-1", "snore-2", "snore-3"}
 -- }}}
 
+-- Initial Trust Warning {{{
+do
+	local function deregister_trust_tick()
+		nameplate.ENTITY:setText(player:getName())
+		nameplate.ENTITY:setBackgroundColor(vec(0,0,0))
+		events.TICK:remove("trust_warning")
+	end
+
+	local function trust_tick()
+		if world.getTimeOfDay() % 20 == 0 then
+			if avatar:canEditVanillaModel() then
+				deregister_trust_tick()
+			elseif world.getTimeOfDay() % 40 == 0 then
+				nameplate.ENTITY:setBackgroundColor(vec(0,0,0))
+			else
+				nameplate.ENTITY:setBackgroundColor(vec(1,1,0))
+			end
+		end
+	end
+
+	events.ENTITY_INIT:register(function ()
+		if not avatar:canEditVanillaModel() then
+			nameplate.ENTITY:setText("[PLEASE UPDATE TRUST]\n" .. player:getName())
+			events.TICK:register(trust_tick, "trust_warning")
+		end
+		events.ENTITY_INIT:remove("trust_init")
+	end, "trust_init")
+end
+-- }}}
+
 -- Expression change -- {{{
 do
 	local expressions={}
