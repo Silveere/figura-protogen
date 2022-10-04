@@ -5,7 +5,7 @@
 model=models.player_model
 armor_model={
 	["BOOTS"]=vanilla_model.BOOTS,
-	["LEGGINGS"]=vanilla_model.LELGGINGS,
+	["LEGGINGS"]=vanilla_model.LEGGINGS,
 	["CHESTPLATE"]=vanilla_model.CHESTPLATE,
 	["HELMET"]=vanilla_model.HELMET
 }
