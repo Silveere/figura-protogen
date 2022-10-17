@@ -286,9 +286,23 @@ end
 -- }}}
 
 -- syncState {{{
-function syncState()
-	ping.setSnoring(skin_state.snore_enabled)
-	ping.syncState(setLocalState())
+do
+	local counter=0
+	function syncState()
+		-- ping.setSnoring(skin_state.snore_enabled)
+		if counter < 5 then
+			ping.syncState((setLocalState()))
+			counter=counter+1
+		end
+	end
+
+	local function cooldownDecay()
+		if counter>0 and world.getTime() % 4 == 0 then
+			counter = counter - 1
+		end
+	end
+
+	events.TICK:register(cooldownDecay,"syncStateCooldown")
 end
 
 do
