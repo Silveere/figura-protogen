@@ -828,27 +828,28 @@ function setArmor(state)
 	syncState()
 end
 
-do
-	local snore_enabled=false
-	local snore_index=1
-	function snore()
-		if snore_enabled then
-			-- TODO
-			-- sound.playCustomSound(SNORES[snore_index],
-			-- 	player.getPos(), vectors.of{20,1})
-			snore_index=snore_index%#SNORES+1
-		end
-	end
-
-	function setSnoring(state)
-		setState("snore_enabled", state)
-		ping.setSnoring(skin_state.snore_enabled)
-	end
-
-	function ping.setSnoring(state)
-		snore_enabled=state
-	end
-end
+-- TODO re-enable snoring
+-- do
+-- 	local snore_enabled=false
+-- 	local snore_index=1
+-- 	function snore()
+-- 		if snore_enabled then
+-- 			-- TODO
+-- 			-- sound.playCustomSound(SNORES[snore_index],
+-- 			-- 	player.getPos(), vectors.of{20,1})
+-- 			snore_index=snore_index%#SNORES+1
+-- 		end
+-- 	end
+-- 
+-- 	function setSnoring(state)
+-- 		setState("snore_enabled", state)
+-- 		ping.setSnoring(skin_state.snore_enabled)
+-- 	end
+-- 
+-- 	function ping.setSnoring(state)
+-- 		snore_enabled=state
+-- 	end
+-- end
 
 --- Toggle Vanilla ---
 function setVanilla(state)
