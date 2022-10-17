@@ -1,5 +1,5 @@
 -- vim: set foldmethod=marker ts=4 sw=4 :
--- TODO rewrite variables: armor_model, ping, model
+-- TODO rewrite variables: armor_model, model
 --- Initial definitions ---
 -- player model backwards compatibility
 model=models.player_model
@@ -9,8 +9,7 @@ armor_model={
 	["CHESTPLATE"]=vanilla_model.CHESTPLATE,
 	["HELMET"]=vanilla_model.HELMET
 }
--- TODO remove placeholder table when pings are implemented
-ping={}
+ping=pings
 -- Texture dimensions --
 TEXTURE_WIDTH = 256
 TEXTURE_HEIGHT = 256
