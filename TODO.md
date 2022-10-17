@@ -5,7 +5,6 @@
 - [ ] Add action wheel icons
 
 ## Rewrite
-- [ ] fix pings
 - [ ] fix data api
 - [ ] reimplement avatar settings
 - [ ] fix sound
@@ -14,6 +13,7 @@
 - [ ] fix armor, won't re-enable until cleanup
 
 ## Cleanup
+- [ ] potentailly rework shared state variables
 - [ ] rework appropriate action wheel items as ToggleAction instead of ClickAction
 - [ ] reimplement partial vanilla as texture swap
 	- [x] remove partial_vanilla stuff from PartsManager
@@ -27,4 +27,5 @@
 - [ ] cleanup armor code to make less redundant
 
 # Done
+- [x] fix pings
 - [x] fix action wheel
