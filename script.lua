@@ -14,6 +14,14 @@ ping=pings
 TEXTURE_WIDTH = 256
 TEXTURE_HEIGHT = 256
 
+-- print debug messages
+debug_print=false
+function debugMessage(str)
+	if debug_print==true then
+		print(str)
+	end
+end
+
 -- utility functions -- {{{
 
 --- Create a string representation of a table
