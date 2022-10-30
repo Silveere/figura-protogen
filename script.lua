@@ -828,6 +828,7 @@ function setArmor(state)
 	syncState()
 end
 
+function snore() end
 -- TODO re-enable snoring
 -- do
 -- 	local snore_enabled=false
