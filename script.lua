@@ -361,6 +361,7 @@ do
 end
 
 function ping.syncState(tbl)
+	logging.debug("ping.syncState")
 	for k, v in pairs(tbl) do
 		local_state[k]=v
 	end
@@ -841,6 +842,7 @@ end
 
 wheel[1]:newAction():title('test expression'):onLeftClick(function() ping.expressionTest() end)
 function ping.expressionTest()
+	logging.debug("ping.expressionTest")
 	changeExpression("hurt", 10)
 end
 wheel[1]:newAction():title('log health'):onLeftClick(function() print(player:getHealth()) end)
@@ -854,12 +856,14 @@ wheel[1]:newAction():title('UwU'):onLeftClick(function() ping.expr("owo") end)
 -- Pings --
 --- Damage function --
 function ping.expr(expr)
+	logging.debug("ping.expr")
 	local val=(expr==current_expression) and "neutral" or expr
 	setExpression(val)
 end
 
 
 function ping.oof(health) -- This is a replacement for onDamage, that function doesn't sync for some reason
+	logging.debug("ping.oof")
 	hurt()
 end
 
@@ -901,6 +905,7 @@ end
 
 
 function ping.tPose()
+	logging.debug("ping.tPose")
 	local_state.emote_vector=player:getPos()
 	-- TODO
 	-- animation.tpose.start()
