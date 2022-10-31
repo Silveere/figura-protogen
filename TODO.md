@@ -3,6 +3,8 @@
 ## General
 - [ ] use matrix thing for UVManager (linear algebra is hard)
 - [ ] Add action wheel icons
+- [ ] add separate function for updating relevant state variables instead of
+	  sending full state to save bandwidth
 - [ ] add function that gets total health with absoprtion
 - [ ] retractable wipers when it rains
 
