@@ -14,6 +14,47 @@ ping=pings
 TEXTURE_WIDTH = 256
 TEXTURE_HEIGHT = 256
 
+LOG_LEVEL="INFO"
+
+-- Basic logging --{{{
+
+do
+	logging = {}
+	local loglevels={
+		["SILENT"]=0,
+		["FATAL"]=1,
+		["ERROR"]=2,
+		["WARN"]=3,
+		["INFO"]=4,
+		["DEBUG"]=5,
+		["TRACE"]=6
+	}
+
+	-- default log level
+	local loglevel="INFO"
+
+	function setLogLevel(level)
+		loglevel=loglevels[level] and level or loglevel
+	end
+
+	setLogLevel(LOG_LEVEL)
+
+	local function printLog(severity, message)
+		if (loglevels[loglevel]) >= severity then
+			log("[" .. loglevel .. "] " .. message)
+		end
+	end
+
+	function logging.fatal(message) printLog(1, message) end
+	function logging.error(message) printLog(2, message) end
+	function logging.warn(message) printLog(3, message) end
+	function logging.info(message) printLog(4, message) end
+	function logging.debug(message) printLog(5, message) end
+	function logging.trace(message) printLog(6, message) end
+end
+
+-- }}}
+
 -- utility functions -- {{{
 
 --- Create a string representation of a table
