@@ -331,7 +331,7 @@ do
 	local counter=0
 	function syncState()
 		-- ping.setSnoring(skin_state.snore_enabled)
-		if counter < 5 then
+		if counter < 3 then
 			ping.syncState((setLocalState()))
 			counter=counter+1
 		end
