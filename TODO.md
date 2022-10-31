@@ -3,6 +3,8 @@
 ## General
 - [ ] use matrix thing for UVManager (linear algebra is hard)
 - [ ] Add action wheel icons
+- [ ] add function that gets total health with absoprtion
+- [ ] retractable wipers when it rains
 
 ## Rewrite
 - [ ] fix data api
