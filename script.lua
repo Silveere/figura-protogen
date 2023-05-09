@@ -832,7 +832,7 @@ do
 		print("page: " .. wheel_index)
 	end
 
-	wheel[1]=action_wheel:createPage()
+	wheel[1]=action_wheel:newPage()
 
 	action_wheel:setPage(wheel[1])
 	action_wheel.scroll=wheelScroll
