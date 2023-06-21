@@ -127,8 +127,9 @@ function ping.syncState(tbl)
 end
 -- }}}
 
+-- math functions
 nmath=require("nulllib.math")
-lerp=math.lerp
+lerp=math.lerp -- this is implemented in figura now
 wave=nmath.wave
 
 -- Master and local state variables -- {{{
@@ -203,72 +204,8 @@ end
 
 PartsManager=require("nulllib.PartsManager")
 
--- UVManager {{{
---
 -- TODO: accept model part for built-in UV management, automatic texture size
-do
-	local mt={}
-	--- @class UVManager
-	UVManager = {
-		step=vec(0,0),
-		offset=vec(0,0),
-		positions={},
-		part=nil,
-		dimensions=nil
-	}
-	mt.__index=UVManager
-	--- @return UVManager
-	--- @param step Vector2 A vector representing the distance between UVs
-	--- @param offset Vector2 A vector represnting the starting point for UVs, or nil
-	--- @param positions table A dictionary of names and offset vectors
-	--- @param part ModelPart Model part to manage
-	function UVManager.new(self, step, offset, positions, part)
-		local t={}
-		if step ~= nil then t.step=step end
-		if offset ~= nil then t.offset=offset end
-		if positions ~= nil then t.positions=positions end
-
-		if part ~= nil then
-			UVManager.setPart(t, part)
-		end
-
-		t=setmetatable(t, mt)
-		return t
-	end
-
-	--- @param part ModelPart Model part to manage
-	function UVManager.setPart(self, part)
-		self.part=part
-		self.dimensions=part:getTextureSize()
-	end
-
-	function UVManager.getUV(self, input)
-		local vect={}
-		local stp=self.step
-		local offset=self.offset
-		if type(input) == "string" then
-			if self.positions[input] == nil then return nil end
-			vect=self.positions[input]
-		else
-			vect=vectors.of(input)
-		end
-		local u=offset.x+(vect.x*stp.x)
-		local v=offset.y+(vect.y*stp.y)
-		if self.dimensions ~= nil then
-			-- TODO override for my specific texture, replace this with matrix stuff
-			-- (get rid of division once you figure out how setUVMatrix works)
-			return vec(u/(self.dimensions.x/2), v/(self.dimensions.y/2))
-		else
-			return util.UV{u, v}
-		end
-	end
-
-	function UVManager.setUV(self, input)
-		if self.part == nil then return false end
-		self.part:setUV(self:getUV(input))
-	end
-end
--- }}}
+UVManager=require("nulllib.UVManager")
 
 -- Parts, groups, other constants -- {{{
 HEAD=model.Head.Head
