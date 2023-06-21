@@ -96,7 +96,9 @@ do
 			buffer[#buffer + 1] = '"???' .. _type .. '???"'
 		end
 	end
-	--- Dumps object as UNSAFE json, i stole this from stackoverflow so i could use json.tool to format it so it's easier to read
+	--- Dumps object as UNSAFE json, i stole this from stackoverflow so i could
+	--  use json.tool to format it so it's easier to read
+	--  TL;DR, do NOT use this as an actual JSON implementation
 	function dumpJSON(obj)
 		if obj == nil then return "null" else
 			local buffer = {}
@@ -131,7 +133,7 @@ function splitstring (inputstr, sep)
 end
 
 ---@param input string
-function unstring(input)
+function parse(input)
 	if input=="nil" then
 		return nil
 	elseif input == "true" or input == "false" then
@@ -418,7 +420,7 @@ do
 			savedData=data.loadAll()
 		end
 		skin_state=mergeTable(
-		map(unstring,data.loadAll()),
+		map(parse,data.loadAll()),
 		defaults)
 	else
 		skin_state=defaults
