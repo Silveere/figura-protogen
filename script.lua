@@ -14,252 +14,8 @@ ping=pings
 TEXTURE_WIDTH = 256
 TEXTURE_HEIGHT = 256
 
-LOG_LEVEL="INFO"
-
--- Basic logging --{{{
-
-do
-	logging = {}
-	local loglevels={
-		["SILENT"]=0,
-		["FATAL"]=1,
-		["ERROR"]=2,
-		["WARN"]=3,
-		["INFO"]=4,
-		["DEBUG"]=5,
-		["TRACE"]=6
-	}
-
-	-- default log level
-	local loglevel="INFO"
-
-	function setLogLevel(level)
-		loglevel=loglevels[level] and level or loglevel
-	end
-
-	setLogLevel(LOG_LEVEL)
-
-	local function printLog(severity, message)
-		if (loglevels[loglevel]) >= severity then
-			log("[" .. loglevel .. "] " .. message)
-		end
-	end
-
-	function logging.fatal(message) printLog(1, message) end
-	function logging.error(message) printLog(2, message) end
-	function logging.warn(message) printLog(3, message) end
-	function logging.info(message) printLog(4, message) end
-	function logging.debug(message) printLog(5, message) end
-	function logging.trace(message) printLog(6, message) end
-end
-
--- }}}
-
--- utility functions -- {{{
-
---- Create a string representation of a table
---- @param o table
-function dumpTable(o)
-	if type(o) == 'table' then
-		local s = '{ '
-		local first_loop=true
-		for k,v in pairs(o) do
-			if not first_loop then
-				s = s .. ', '
-			end
-			first_loop=false
-			if type(k) ~= 'number' then k = '"'..k..'"' end
-			s = s .. '['..k..'] = ' .. dumpTable(v)
-		end
-		return s .. '} '
-	else
-		return tostring(o)
-	end
-end
-
-do
-	local function format_any_value(obj, buffer)
-		local _type = type(obj)
-		if _type == "table" then
-			buffer[#buffer + 1] = '{"'
-			for key, value in next, obj, nil do
-				buffer[#buffer + 1] = tostring(key) .. '":'
-				format_any_value(value, buffer)
-				buffer[#buffer + 1] = ',"'
-			end
-			buffer[#buffer] = '}' -- note the overwrite
-		elseif _type == "string" then
-			buffer[#buffer + 1] = '"' .. obj .. '"'
-		elseif _type == "boolean" or _type == "number" then
-			buffer[#buffer + 1] = tostring(obj)
-		else
-			buffer[#buffer + 1] = '"???' .. _type .. '???"'
-		end
-	end
-	--- Dumps object as UNSAFE json, i stole this from stackoverflow so i could
-	--  use json.tool to format it so it's easier to read
-	--  TL;DR, do NOT use this as an actual JSON implementation
-	function dumpJSON(obj)
-		if obj == nil then return "null" else
-			local buffer = {}
-			format_any_value(obj, buffer)
-			return table.concat(buffer)
-		end
-	end
-end
-
-
--- TODO: accept model part to determine texture width and height
----@param uv table
-function UV(uv)
-	return vec(
-	uv[1]/TEXTURE_WIDTH,
-	uv[2]/TEXTURE_HEIGHT
-	)
-end
-
-
----@param inputstr string
----@param sep string
-function splitstring (inputstr, sep)
-        if sep == nil then
-                sep = "%s"
-        end
-        local t={}
-        for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-                table.insert(t, str)
-        end
-        return t
-end
-
----@param input string
-function parse(input)
-	if input=="nil" then
-		return nil
-	elseif input == "true" or input == "false" then
-		return input=="true"
-	elseif tonumber(input) ~= nil then
-		return tonumber(input)
-	else
-		return input
-	end
-end
-
----@param func function
----@param table table
-function map(func, table)
-	local t={}
-	for k, v in pairs(table) do
-		t[k]=func(v)
-	end
-	return t
-end
-
-
----@param func function
----@param table table
-function filter(func, table)
-	local t={}
-	for k, v in pairs(table) do
-		if func(v) then
-			t[k]=v
-		end
-	end
-	return t
-end
-
----@param tbl table
----@param val any
-function has_value(tbl, val)
-	for _, v in pairs(tbl) do
-		if v==val then return true end
-	end
-	return false
-end
-
---- Unordered reduction, only use when working with dictionaries and
---- execution order does not matter
----@param tbl table Table to reduce
----@param func function Function used to reduce table
----@param init any Initial operand for reduce function
-function reduce(func, tbl, init)
-	local result = init
-	local first_loop = true
-	for _, v in pairs(tbl) do
-		if first_loop and init == nil then
-			result=v
-		else
-			result = func(result, v)
-		end
-		first_loop=false
-	end
-	return result
-end
-
---- Ordered reduction, does not work with dictionaries
----@param tbl table Table to reduce
----@param func function Function used to reduce table
----@param init any Initial operand for reduce function
-function ireduce(func, tbl, init)
-	local result = init
-	local first_loop = true
-	for _, v in ipairs(tbl) do
-		if first_loop and init == nil then
-			result=v
-		else
-			result = func(result, v)
-		end
-		first_loop=false
-	end
-	return result
-end
-
---- Merge two tables. First table value takes precedence when conflict occurs.
----@param tb1 table
----@param tb2 table
-function mergeTable(tb1, tb2)
-	local t={}
-	for k, v in pairs(tb1) do
-		t[k]=v
-	end
-	for k, v in pairs(tb2) do
-		if type(k)=="number" then
-			table.insert(t, v)
-		else
-			if t[k]==nil then
-				t[k]=v
-			end
-		end
-	end
-	return t
-end
-
-function debugPrint(var)
-	print(var)
-	return var
-end
-
-function debugPrintTable(var)
-	printTable(var)
-	return var
-end
-
---- Recursively walk a model tree and return a table containing the group and each of its sub-groups
---- @param group table The group to recurse
---- @return table Resulting table
-function recurseModelGroup(group)
-	local t={}
-	table.insert(t, group)
-	if group:getType()=="GROUP" then
-		for k, v in pairs(group:getChildren()) do
-			for _, v2 in pairs(recurseModelGroup(v)) do
-				table.insert(t, v2)
-			end
-		end
-	end
-	return t
-end
--- }}}
+util = require("nulllib.util")
+logging = require("nulllib.logging")
 
 -- Timer (not mine lol) -- {{{
 -- TODO investigate if events can replace some of this
@@ -371,14 +127,9 @@ function ping.syncState(tbl)
 end
 -- }}}
 
--- Math {{{
---- Sine function with period and amplitude
---- @param x number Input value
---- @param period number Period of sine wave
---- @param amp number Peak amplitude of sine wave
-function wave(x, period, amp) return math.sin((2/period)*math.pi*(x%period))*amp end
-function lerp(a, b, t) return a + ((b - a) * t) end
--- }}}
+nmath=require("nulllib.math")
+lerp=math.lerp
+wave=nmath.wave
 
 -- Master and local state variables -- {{{
 -- Local State (these are copied by pings at runtime) --
@@ -419,8 +170,8 @@ do
 			end
 			savedData=data.loadAll()
 		end
-		skin_state=mergeTable(
-		map(parse,data.loadAll()),
+		skin_state=util.mergeTable(
+		util.map(util.parse,data.loadAll()),
 		defaults)
 	else
 		skin_state=defaults
@@ -450,96 +201,7 @@ end
 
 -- }}}
 
--- PartsManager -- {{{
-do
-	PartsManager={}
-	local pm={}
-
-	--- ensure part is initialized
-	local function initPart(part)
-		local part_key=part
-		if pm[part_key] == nil then
-			pm[part_key]={}
-		end
-		pm[part_key].part=part
-		if pm[part_key].functions == nil then
-			pm[part_key].functions = {}
-		end
-		if pm[part_key].init==nil then
-			pm[part_key].init="true"
-		end
-	end
-	--- Add function to part in PartsManager.
-	--- @param part table Any object with a setEnabled() method.
-	--- @param func function Function to add to model part's function chain.
-	--- @param init? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
-	function PartsManager.addPartFunction(part, func, init)
-		initPart(part)
-		local part_key=part
-		if init ~= nil then
-			pm[part_key].init=init
-		end
-		table.insert(pm[part_key]["functions"], func)
-	end
-
-	--- Set initial value for chain.
-	--- @param part table Any object with a setEnabled() method.
-	--- @param init? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
-	function PartsManager.setInitialValue(part, init)
-		assert(init~=nil)
-		initPart(part)
-		local part_key=part
-		pm[part_key].init=init
-	end
-
-	--- Set initial value for chain on all objects in table.
-	--- @param group table A table containing objects with a setEnabled() method.
-	--- @param init? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
-	function PartsManager.setGroupInitialValue(group, init)
-		assert(init~=nil)
-		for _, v in pairs(group) do
-			PartsManager.setInitialValue(v, init)
-		end
-	end
-
-	--- Evaluate a part's chain to determine if it should be visible.
-	--- @param part table An object managed by PartsManager.
-	function PartsManager.evaluatePart(part)
-		local part_key=part
-		assert(pm[part_key] ~= nil)
-
-		local evalFunc=function(x, y) return y(x) end
-		local init=pm[part_key].init
-		return ireduce(evalFunc, pm[part_key].functions, true)
-	end
-	local evaluatePart=PartsManager.evaluatePart
-
-	--- Refresh (enable or disable) a part based on the result of it's chain.
-	--- @param part table An object managed by PartsManager.
-	function PartsManager.refreshPart(part)
-		local part_enabled=evaluatePart(part)
-		part:setVisible(part_enabled)
-		return part_enabled
-	end
-
-	--- Refresh all parts managed by PartsManager.
-	function PartsManager.refreshAll()
-		for _, v in pairs(pm) do
-			PartsManager.refreshPart(v.part)
-		end
-	end
-
-	--- Add function to list of parts in PartsManager
-	--- @param group table A table containing objects with a setEnabled() method.
-	--- @param func function Function to add to each model part's function chain.
-	--- @param default? boolean Default value for chain. Should only be set once, subsequent uses overwrite the entire chain's initial value.
-	function PartsManager.addPartGroupFunction(group, func, default)
-		for _, v in ipairs(group) do
-			PartsManager.addPartFunction(v, func, default)
-		end
-	end
-end
--- }}}
+PartsManager=require("nulllib.PartsManager")
 
 -- UVManager {{{
 --
@@ -597,7 +259,7 @@ do
 			-- (get rid of division once you figure out how setUVMatrix works)
 			return vec(u/(self.dimensions.x/2), v/(self.dimensions.y/2))
 		else
-			return UV{u, v}
+			return util.UV{u, v}
 		end
 	end
 
@@ -682,7 +344,7 @@ BODY_EMISSIVES={
 FACE_EMISSIVES={
 	model.Head.Face
 }
-EMISSIVES=mergeTable(BODY_EMISSIVES, FACE_EMISSIVES)
+EMISSIVES=util.mergeTable(BODY_EMISSIVES, FACE_EMISSIVES)
 COLORS={}
 COLORS.neutral=vec(127/255,127/255,255/255)
 COLORS.hurt=   vec(1, 0, 63/255)
@@ -726,11 +388,11 @@ do
 	PM.addPartFunction(vanilla_model.CAPE, function(last) return last and not local_state.tail_enabled end)
 
 	--- Custom state
-	-- local tail_parts=mergeTable({model.Body.TailBase}, TAIL_BONES)
+	-- local tail_parts=util.mergeTable({model.Body.TailBase}, TAIL_BONES)
 	local tail_parts={model.Body.MTail1, model.Body.TailBase}
 	
 	-- TODO: old vanilla_partial groups, use these for texture swap
-	-- local vanilla_partial_disabled=mergeTable(MAIN_GROUPS, {model.Body.Body, model.Body.BodyLayer})
+	-- local vanilla_partial_disabled=util.mergeTable(MAIN_GROUPS, {model.Body.Body, model.Body.BodyLayer})
 	-- local vanilla_partial_enabled={model.Head, model.Body}
 
 	-- Show shattered only at low health
@@ -745,7 +407,7 @@ do
 	PM.addPartGroupFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
 
 	--- Armor state
-	local all_armor=reduce(mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
+	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
 	PM.addPartGroupFunction(all_armor, function(last) return last and local_state.armor_enabled end)
 	-- Only show armor if equipped
 	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
@@ -1115,7 +777,7 @@ function player_init()
 	old_state.health=local_state.health
 	-- TODO possibly reconsider if this should be redone
 	-- actually it's probably fine, it's jsut here because i forget visibility settings
-	-- local all_parts=recurseModelGroup(model)
+	-- local all_parts=util.recurseModelGroup(model)
 
 	-- for k, v in pairs(all_parts) do
 	-- 	v:setVisible(nil)
