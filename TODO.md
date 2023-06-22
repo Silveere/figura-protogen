@@ -10,6 +10,7 @@
 
 ## Rewrite
 - [ ] fix data api
+	- [ ] ConfigAPI
 - [ ] reimplement avatar settings
 - [ ] fix sound
 - [ ] fix Blockbench animations
@@ -24,9 +25,9 @@
 	- [ ] fix UVManager with matrices or something
 	- [ ] add swap to skin texture
 - [ ] split off large snippets of code into separate files
-	- [ ] PartsManager
-	- [ ] UVManager
-	- [ ] utility functions
+	- [.] PartsManager
+	- [.] UVManager
+	- [.] utility functions
 - [ ] cleanup tick functions, timers
 - [ ] cleanup armor code to make less redundant
 
