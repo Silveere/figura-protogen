@@ -17,6 +17,13 @@ TEXTURE_HEIGHT = 256
 util = require("nulllib.util")
 logging = require("nulllib.logging")
 timers=require("nulllib.timers")
+nmath=require("nulllib.math")
+PartsManager=require("nulllib.PartsManager")
+UVManager=require("nulllib.UVManager")
+
+-- math functions
+lerp=math.lerp -- this is implemented in figura now
+wave=nmath.wave
 
 -- syncState {{{
 do
@@ -60,11 +67,6 @@ function ping.syncState(tbl)
 	pmRefresh()
 end
 -- }}}
-
--- math functions
-nmath=require("nulllib.math")
-lerp=math.lerp -- this is implemented in figura now
-wave=nmath.wave
 
 -- Master and local state variables -- {{{
 -- Local State (these are copied by pings at runtime) --
@@ -135,11 +137,6 @@ function setState(name, state)
 end
 
 -- }}}
-
-PartsManager=require("nulllib.PartsManager")
-
--- TODO: accept model part for built-in UV management, automatic texture size
-UVManager=require("nulllib.UVManager")
 
 -- Parts, groups, other constants -- {{{
 HEAD=model.Head.Head
