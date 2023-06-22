@@ -16,73 +16,7 @@ TEXTURE_HEIGHT = 256
 
 util = require("nulllib.util")
 logging = require("nulllib.logging")
-
--- Timer (not mine lol) -- {{{
--- TODO investigate if events can replace some of this
-do
-	local timers = {}
-	function wait(ticks,next)
-		table.insert(timers, {t=world.getTime()+ticks,n=next})
-	end
-	local function tick()
-		for key,timer in pairs(timers) do
-			if world.getTime() >= timer.t then
-				timer.n()
-				table.remove(timers,key)
-			end
-		end
-	end
-
-	events.TICK:register(function() if player then tick() end end, "timer")
-end
-
--- named timers (this one is mine but heavily based on the other) --
--- if timer is armed twice before expiring it will only be called once) --
-do
-	local timers = {}
-	function namedWait(ticks, next, name)
-		-- main difference, this will overwrite an existing timer with
-		-- the same name
-		timers[name]={t=world.getTime()+ticks,n=next}
-	end
-	local function tick()
-		for key, timer in pairs(timers) do
-			if world.getTime() >= timer.t then
-				timer.n()
-				timers[key]=nil
-			end
-		end
-	end
-	events.TICK:register(function() if player then tick() end end, "named_timer")
-end
-
--- named cooldowns
-do
-	local timers={}
-	function cooldown(ticks, name)
-		if timers[name] == nil then
-			timers[name]={t=world.getTime()+ticks}
-			return true
-		end
-		return false
-	end
-	local function tick()
-		for key, timer in pairs(timers) do
-			if world.getTime() >= timer.t then
-				timers[key]=nil
-			end
-		end
-	end
-	events.TICK:register(function() if player then tick() end end, "cooldown")
-end
-
-function rateLimit(ticks, next, name)
-	if cooldown(ticks+1, name) then
-		namedWait(ticks, next, name)
-	end
-end
-
--- }}}
+timers=require("nulllib.timers")
 
 -- syncState {{{
 do
@@ -405,7 +339,7 @@ do
 		-- This one is for more explicit "flashes" such as player hurt
 		-- animations, get color explicitly
 		setColor(COLORS[expression])
-		namedWait(ticks, resetExpression, "resetExpression")
+		timers.namedWait(ticks, resetExpression, "resetExpression")
 	end
 	function resetExpression()
 		lock_color=false
@@ -757,7 +691,7 @@ function tick()
 	if world.getTimeOfDay() % 20 == 0 then
 
 		if player:getPose() == "SLEEPING" then
-			if cooldown(20*4, "snore") then
+			if timers.cooldown(20*4, "snore") then
 				snore()
 			end
 		end
