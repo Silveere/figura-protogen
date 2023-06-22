@@ -7,6 +7,7 @@
 	  sending full state to save bandwidth
 - [ ] add function that gets total health with absoprtion
 - [ ] retractable wipers when it rains
+- [ ] avatar themes?? (AvatarAPI.getColor)
 
 ## Rewrite
 - [ ] fix data api
