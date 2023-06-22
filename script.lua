@@ -25,6 +25,7 @@ UVManager=require("nulllib.UVManager")
 lerp=math.lerp -- this is implemented in figura now
 wave=nmath.wave
 
+-- this is too horrifying to put into nulllib for now
 -- syncState {{{
 do
 	local counter=0
@@ -68,6 +69,7 @@ function ping.syncState(tbl)
 end
 -- }}}
 
+-- so is this
 -- Master and local state variables -- {{{
 -- Local State (these are copied by pings at runtime) --
 local_state={}
