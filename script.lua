@@ -21,6 +21,7 @@ nmath=require("nulllib.math")
 PartsManager=require("nulllib.PartsManager")
 UVManager=require("nulllib.UVManager")
 sharedstate=require("nulllib.sharedstate")
+sharedconfig=require("nulllib.sharedconfig")
 
 -- math functions
 lerp=math.lerp -- this is implemented in figura now
@@ -77,7 +78,9 @@ end
 -- so is this
 -- Master and local state variables -- {{{
 -- Local State (these are copied by pings at runtime) --
+---@deprecated use sharedstate or track internally
 local_state={}
+---@deprecated use sharedstate with callbacks or track internally
 old_state={}
 -- master state variables and configuration (do not access within pings) --
 do
@@ -92,6 +95,8 @@ do
 		["aquatic_enabled"]=true,
 		["aquatic_override"]=false
 	}
+	sharedconfig.load_defaults(defaults)
+
 	---@deprecated use config api (TODO) instead
 	function setLocalState()
 		if host:isHost() then
