@@ -491,92 +491,92 @@ do
 end
 
 -- TODO fix code after optimization in prewrite
-function armor()
-	if true then return nil end
-	-- ^ hacky way to disable a function without uncommenting the entire thing to not break git vcs
-
-	-- Get equipped armor, extract name from item ID
-	local leggings_item = player.getEquipmentItem(4)
-	local boots_item    = player.getEquipmentItem(3)
-	local leggings     = string.sub(leggings_item.getType(), 11, -10)
-	local boots        = string.sub(boots_item.getType(),    11, -7)
-
-	if local_state.armor_enabled then
-		if old_state.leggings ~= leggings or old_state.armor_enabled ~= local_state.armor_enabled  then
-			-- leggings
-			armor_glint.leggings=leggings_item.hasGlint()
-			local leggings_color=colorArmor(leggings_item) or armor_color[leggings]
-			local uv=tailuvm:getUV(leggings)
-			if uv ~= nil then
-				armor_state.leggings=true
-				for k, v in pairs(TAIL_LEGGINGS) do
-					v.setUV(uv)
-				end
-				if leggings=="leather" then
-					for k, v in pairs(TAIL_LEGGINGS_COLOR) do
-						v.setColor(leggings_color)
-					end
-				else
-					for k, v in pairs(TAIL_LEGGINGS) do
-						v.setColor({1, 1, 1})
-					end
-				end
-			else
-				armor_state.leggings=false
-			end
-			pmRefresh()
-		end
-
-		if old_state.boots ~= boots or old_state.armor_enabled ~= local_state.armor_enabled  then
-			-- boots
-			armor_glint.boots=boots_item.hasGlint()
-			local boots_color=colorArmor(boots_item) or armor_color[boots]
-			local uv_boots=tailuvm:getUV(boots)
-			if uv_boots ~= nil then
-				armor_state.boots=true
-				for k, v in pairs(TAIL_BOOTS) do
-					v.setUV(uv_boots)
-				end
-				if boots=="leather" then
-					model.Body.MTail1.MTail2.MTail3.Boot.setColor(boots_color)
-					armor_state.leather_boots=true
-				else
-					model.Body.MTail1.MTail2.MTail3.Boot.setColor({1, 1, 1})
-					armor_state.leather_boots=false
-				end
-			else
-				armor_state.boots=false
-			end
-			pmRefresh()
-		end
-	else
-		armor_glint.leggings=false
-		armor_glint.boots=false
-	end
-
-	if armor_glint.leggings then
-		for _, v in pairs(TAIL_LEGGINGS) do
-			v.setShader("Glint")
-		end
-	else
-		for _, v in pairs(TAIL_LEGGINGS) do
-			v.setShader("None")
-		end
-	end
-	if armor_glint.boots then
-		for _, v in pairs(TAIL_BOOTS) do
-			v.setShader("Glint")
-		end
-	else
-		for _, v in pairs(TAIL_BOOTS) do
-			v.setShader("None")
-		end
-	end
-
-	old_state.boots=boots
-	old_state.leggings=leggings
-	old_state.armor_enabled=local_state.armor_enabled
-end
+-- function armor()
+-- 	if true then return nil end
+-- 	-- ^ hacky way to disable a function without uncommenting the entire thing to not break git vcs
+-- 
+-- 	-- Get equipped armor, extract name from item ID
+-- 	local leggings_item = player.getEquipmentItem(4)
+-- 	local boots_item    = player.getEquipmentItem(3)
+-- 	local leggings     = string.sub(leggings_item.getType(), 11, -10)
+-- 	local boots        = string.sub(boots_item.getType(),    11, -7)
+-- 
+-- 	if local_state.armor_enabled then
+-- 		if old_state.leggings ~= leggings or old_state.armor_enabled ~= local_state.armor_enabled  then
+-- 			-- leggings
+-- 			armor_glint.leggings=leggings_item.hasGlint()
+-- 			local leggings_color=colorArmor(leggings_item) or armor_color[leggings]
+-- 			local uv=tailuvm:getUV(leggings)
+-- 			if uv ~= nil then
+-- 				armor_state.leggings=true
+-- 				for k, v in pairs(TAIL_LEGGINGS) do
+-- 					v.setUV(uv)
+-- 				end
+-- 				if leggings=="leather" then
+-- 					for k, v in pairs(TAIL_LEGGINGS_COLOR) do
+-- 						v.setColor(leggings_color)
+-- 					end
+-- 				else
+-- 					for k, v in pairs(TAIL_LEGGINGS) do
+-- 						v.setColor({1, 1, 1})
+-- 					end
+-- 				end
+-- 			else
+-- 				armor_state.leggings=false
+-- 			end
+-- 			pmRefresh()
+-- 		end
+-- 
+-- 		if old_state.boots ~= boots or old_state.armor_enabled ~= local_state.armor_enabled  then
+-- 			-- boots
+-- 			armor_glint.boots=boots_item.hasGlint()
+-- 			local boots_color=colorArmor(boots_item) or armor_color[boots]
+-- 			local uv_boots=tailuvm:getUV(boots)
+-- 			if uv_boots ~= nil then
+-- 				armor_state.boots=true
+-- 				for k, v in pairs(TAIL_BOOTS) do
+-- 					v.setUV(uv_boots)
+-- 				end
+-- 				if boots=="leather" then
+-- 					model.Body.MTail1.MTail2.MTail3.Boot.setColor(boots_color)
+-- 					armor_state.leather_boots=true
+-- 				else
+-- 					model.Body.MTail1.MTail2.MTail3.Boot.setColor({1, 1, 1})
+-- 					armor_state.leather_boots=false
+-- 				end
+-- 			else
+-- 				armor_state.boots=false
+-- 			end
+-- 			pmRefresh()
+-- 		end
+-- 	else
+-- 		armor_glint.leggings=false
+-- 		armor_glint.boots=false
+-- 	end
+-- 
+-- 	if armor_glint.leggings then
+-- 		for _, v in pairs(TAIL_LEGGINGS) do
+-- 			v.setShader("Glint")
+-- 		end
+-- 	else
+-- 		for _, v in pairs(TAIL_LEGGINGS) do
+-- 			v.setShader("None")
+-- 		end
+-- 	end
+-- 	if armor_glint.boots then
+-- 		for _, v in pairs(TAIL_BOOTS) do
+-- 			v.setShader("Glint")
+-- 		end
+-- 	else
+-- 		for _, v in pairs(TAIL_BOOTS) do
+-- 			v.setShader("None")
+-- 		end
+-- 	end
+-- 
+-- 	old_state.boots=boots
+-- 	old_state.leggings=leggings
+-- 	old_state.armor_enabled=local_state.armor_enabled
+-- end
 
 function colorArmor(item)
 	local tag = item.tag
