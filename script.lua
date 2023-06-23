@@ -31,6 +31,8 @@ wave=nmath.wave
 -- syncState {{{
 do
 	local counter=0
+
+	---@deprecated use sharedstate instead
 	function syncState()
 		-- ping.setSnoring(skin_state.snore_enabled)
 		if counter < 3 then
@@ -62,6 +64,7 @@ do
 	end
 end
 
+---@deprecated Use sharedstate instead
 function ping.syncState(tbl)
 	logging.debug("ping.syncState")
 	for k, v in pairs(tbl) do
@@ -89,8 +92,9 @@ do
 		["aquatic_enabled"]=true,
 		["aquatic_override"]=false
 	}
+	---@deprecated use config api (TODO) instead
 	function setLocalState()
-		if is_host then
+		if host:isHost() then
 			for k, v in pairs(skin_state) do
 				local_state[k]=v
 			end
@@ -102,17 +106,16 @@ do
 		return local_state
 	end
 	-- TODO reimplement with new data API
-	-- if is_host then
-	if false then
-		local savedData=data.loadAll()
+	if host:isHost() then
+		local savedData=config:load()
 		if savedData == nil then
 			for k, v in pairs(defaults) do
-				data.save(k, v)
+				config:save(k, v)
 			end
-			savedData=data.loadAll()
+			savedData=config:load()
 		end
 		skin_state=util.mergeTable(
-		util.map(util.parse,data.loadAll()),
+		util.map(util.parse,config:load()),
 		defaults)
 	else
 		skin_state=defaults
@@ -152,11 +155,11 @@ VANILLA_GROUPS={
 	["BODY"]={vanilla_model.BODY, vanilla_model.JACKET},
 	["LEFT_ARM"]={vanilla_model.LEFT_ARM, vanilla_model.LEFT_SLEEVE},
 	["RIGHT_ARM"]={vanilla_model.RIGHT_ARM, vanilla_model.RIGHT_SLEEVE},
-	["LEFT_LEG"]={vanilla_model.LEFT_LEG, vanilla_model.LEFT_PANTS_LEG},
-	["RIGHT_LEG"]={vanilla_model.RIGHT_LEG, vanilla_model.RIGHT_PANTS_LEG},
-	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG },
+	["LEFT_LEG"]={vanilla_model.LEFT_LEG, vanilla_model.LEFT_PANTS},
+	["RIGHT_LEG"]={vanilla_model.RIGHT_LEG, vanilla_model.RIGHT_PANTS},
+	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS, vanilla_model.RIGHT_PANTS },
 	["INNER"]={ vanilla_model.HEAD, vanilla_model.BODY, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
-	["ALL"]={ vanilla_model.HEAD, vanilla_model.BODY, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG, vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG },
+	["ALL"]={ vanilla_model.HEAD, vanilla_model.BODY, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG, vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS, vanilla_model.RIGHT_PANTS },
 	["ARMOR"]=armor_model
 }
 
@@ -224,7 +227,7 @@ COLORS.lava=   vec(1, 128/255, 64/255)
 -- prev 255 160 192
 COLORS.owo=    vec(1, 128/255, 160/255)
 COLORS["end"]="end"
-for k, v in pairs(EMISSIVES) do
+for _, v in pairs(EMISSIVES) do
 	v:setColor(COLORS.neutral)
 end
 
@@ -409,7 +412,7 @@ function setArmor(state)
 	syncState()
 end
 
-function snore() end
+local function snore() end
 -- TODO re-enable snoring
 -- do
 -- 	local snore_enabled=false
@@ -449,11 +452,13 @@ end
 -- }}}
 
 -- Tail stuff {{{
+local tail_cooldown
 function aquaticTailVisible()
 	tail_cooldown=tail_cooldown or 0
-	return (local_state.aquatic_enabled and (player:isInWater() or player:isInLava()) or local_state.aquatic_override or tail_cooldown>0) and not getVanillaVisible() end
+	return (local_state.aquatic_enabled and (player:isInWater() or player:isInLava()) or local_state.aquatic_override or tail_cooldown>0) and not getVanillaVisible()
+end
 
-function updateTailVisibility()
+local function updateTailVisibility()
 	local anim=player:getPose()
 	local water=player:isInWater()
 	local lava=player:isInLava()
@@ -609,7 +614,7 @@ end
 function animateTail(val)
 	local per_y=20*4
 	local per_x=20*6
-	for k, v in ipairs(REG_TAIL_BONES) do
+	for k, _ in ipairs(REG_TAIL_BONES) do
 		local cascade=(k-1)*12
 		REG_TAIL_BONES[k]:setRot(vec( tail_original_rot[k].x + wave(val-cascade, per_x, 3), wave(val-cascade, per_y, 12), tail_original_rot[k].z ))
 	end
@@ -712,7 +717,8 @@ function tick()
 
 
 	-- Refresh tail armor state
-	armor()
+	-- TODO re add armor stuff
+	--armor()
 	-- Implements tail cooldown conditions
 	updateTailVisibility()
 
@@ -730,7 +736,7 @@ events.TICK:register(function() if player then tick() end end, "main_tick")
 -- }}}
 
 -- Render function {{{
-function render(delta)
+local function render(delta)
 	if aquaticTailVisible() then
 		animateMTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
 	else
