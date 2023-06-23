@@ -20,12 +20,14 @@ timers=require("nulllib.timers")
 nmath=require("nulllib.math")
 PartsManager=require("nulllib.PartsManager")
 UVManager=require("nulllib.UVManager")
+sharedstate=require("nulllib.sharedstate")
 
 -- math functions
 lerp=math.lerp -- this is implemented in figura now
 wave=nmath.wave
 
 -- this is too horrifying to put into nulllib for now
+-- HELL YEAH TIME TO DEPRECATE THIS BITCH!!!
 -- syncState {{{
 do
 	local counter=0
