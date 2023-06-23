@@ -301,7 +301,7 @@ do
 	expressions["end"]=expressions.neutral
 	expressions.hurt=vec(0,1)
 	expressions.owo=vec(0,2)
-	local expruvm=UVManager:new(vec(8, 8), nil, expressions, FACE)
+	local expruvm=UVManager.new(vec(8, 8), nil, expressions, FACE)
 	current_expression="neutral"
 
 	-- color/expression rules
@@ -482,7 +482,7 @@ do
 	positions['golden']=vec(0, 3)
 	positions['diamond']=vec(0, 4)
 	positions['netherite']=vec(0, 5)
-	tailuvm=UVManager:new(vec(0, 19), nil, positions)
+	tailuvm=UVManager.new(vec(0, 19), nil, positions)
 end
 
 -- TODO fix code after optimization in prewrite
