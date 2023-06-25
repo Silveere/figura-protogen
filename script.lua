@@ -23,6 +23,9 @@ UVManager=require("nulllib.UVManager")
 sharedstate=require("nulllib.sharedstate")
 sharedconfig=require("nulllib.sharedconfig")
 
+-- shortcuts for /figura run so i don't have to type so much
+C={}
+
 -- math functions
 lerp=math.lerp -- this is implemented in figura now
 wave=nmath.wave
@@ -72,7 +75,7 @@ do
 	sharedconfig.load_defaults(defaults)
 end
 
-function printSettings()
+local function printSettings()
 	print("Settings:")
 	printTable(sharedconfig.load())
 end
@@ -80,7 +83,16 @@ if sharedconfig.load("print_settings") then
 	printSettings()
 end
 
+--- Convenience, manipulate settings
+---@param key? string Key to access
+---@param value? any Value to set
+function C.set(key, value)
+	if value ~= nil and key ~= nil then
+		sharedconfig.save(key, value)
+	elseif key ~= nil then
+		print(sharedconfig.load(key))
 	else
+		printSettings()
 	end
 end
 -- }}}
