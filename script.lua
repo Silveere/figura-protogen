@@ -27,6 +27,16 @@ sharedconfig=require("nulllib.sharedconfig")
 lerp=math.lerp -- this is implemented in figura now
 wave=nmath.wave
 
+-- for global state tracking, post syncState era
+-- this isn't entirely necessary but it's good to know what has and hasn't been
+-- migrated yet. I should probably rewrite stuff that uses it, but most of it
+-- isn't nearly as bad as the old syncState/setLocalState/etc. It's currently
+-- only used for a somewhat scattered color check funciton.
+STATE={
+	["current"]={},
+	["old"]={}
+}
+
 -- this is too horrifying to put into nulllib for now
 -- HELL YEAH TIME TO DEPRECATE THIS BITCH!!!
 -- syncState {{{
@@ -35,6 +45,8 @@ do
 
 	---@deprecated use sharedstate instead
 	function syncState()
+		logging.warn([[Call to deprecated function syncState()
+			]] .. util.traceback())
 		-- ping.setSnoring(skin_state.snore_enabled)
 		if counter < 3 then
 			ping.syncState((setLocalState()))
@@ -67,6 +79,8 @@ end
 
 ---@deprecated Use sharedstate instead
 function ping.syncState(tbl)
+	logging.warn([[Call to deprecated function pings.syncState()
+		]] .. util.traceback())
 	logging.debug("ping.syncState")
 	for k, v in pairs(tbl) do
 		local_state[k]=v
@@ -78,10 +92,13 @@ end
 -- so is this
 -- Master and local state variables -- {{{
 -- Local State (these are copied by pings at runtime) --
----@deprecated use sharedstate or track internally
+---@deprecated use sharedstate, sharedconfig, or track internally
 local_state={}
 ---@deprecated use sharedstate with callbacks or track internally
 old_state={}
+
+---@deprecated use sharedstate, sharedconfig, or track internally
+skin_state={}
 -- master state variables and configuration (do not access within pings) --
 do
 	local is_host=host:isHost()
@@ -99,6 +116,8 @@ do
 
 	---@deprecated use config api (TODO) instead
 	function setLocalState()
+		logging.warn([[Call to deprecated function setLocalState()
+			]] .. util.traceback())
 		if host:isHost() then
 			for k, v in pairs(skin_state) do
 				local_state[k]=v
@@ -130,14 +149,13 @@ end
 
 function printSettings()
 	print("Settings:")
-	for k, v in pairs(skin_state) do
-		print(tostring(k)..": "..tostring(v))
-	end
+	printTable(sharedconfig.load())
 end
-if skin_state.print_settings==true then
+if sharedconfig.load("print_settings") then
 	printSettings()
 end
 
+---@deprecated use sharedconfig
 function setState(name, state)
 	if state == nil then
 		skin_state[name]=not skin_state[name]
@@ -248,15 +266,15 @@ do
 	end
 
 	local function vanillaPartial()
-		if local_state.vanilla_enabled then
+		if sharedconfig.load("vanilla_enabled") then
 			return false
 		end
-		return local_state.vanilla_partial
+		return sharedconfig.load("vanilla_partial")
 	end
 
 	local function forceVanilla()
 		print(vanilla_model.PLAYER:getVisible())
-		return not avatar:canEditVanillaModel() or local_state.vanilla_enabled or vanilla_model.PLAYER:getVisible()
+		return not avatar:canEditVanillaModel() or sharedconfig.load("vanilla_enabled") or vanilla_model.PLAYER:getVisible()
 	end
 
 	-- eventually replace this with an instance once PartsManager becomes a class
@@ -265,7 +283,7 @@ do
 
 	--- Vanilla state
 	-- no cape if tail enabled (it clips)
-	PM.addPartFunction(vanilla_model.CAPE, function(last) return last and not local_state.tail_enabled end)
+	PM.addPartFunction(vanilla_model.CAPE, function(last) logging.trace("pm tail enabled func", sharedconfig.load("tail_enabled")) return last and not sharedconfig.load("tail_enabled") end)
 
 	--- Custom state
 	-- local tail_parts=util.mergeTable({model.Body.TailBase}, TAIL_BONES)
@@ -276,10 +294,10 @@ do
 	-- local vanilla_partial_enabled={model.Head, model.Body}
 
 	-- Show shattered only at low health
-	PM.addPartFunction(SHATTER, function(last) return last and local_state.health <= 5 end)
+	PM.addPartFunction(SHATTER, function(last) return last and sharedstate.get("health") <= 5 end)
 
 	-- Enable tail setting
-	PM.addPartFunction(model.Body_Tail, function(last) return last and local_state.tail_enabled end)
+	PM.addPartFunction(model.Body_Tail, function(last) return last and sharedconfig.load("tail_enabled") end)
 	-- no legs, regular tail in water if tail enabled
 	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail, armor_model.LEGGINGS, armor_model.BOOTS}
 	PM.addPartGroupFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
@@ -288,7 +306,7 @@ do
 
 	--- Armor state
 	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
-	PM.addPartGroupFunction(all_armor, function(last) return last and local_state.armor_enabled end)
+	PM.addPartGroupFunction(all_armor, function(last) return last and sharedconfig.load("armor_enabled") end)
 	-- Only show armor if equipped
 	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
 	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
@@ -413,8 +431,7 @@ end
 
 --- Toggle Armor ---
 function setArmor(state)
-	setState("armor_enabled", state)
-	syncState()
+	sharedconfig.save("armor_enabled", state)
 end
 
 local function snore() end
@@ -443,15 +460,14 @@ local function snore() end
 
 --- Toggle Vanilla ---
 function setVanilla(state)
-	setState("vanilla_enabled", state)
-	syncState()
+	sharedconfig.save("vanilla_enabled", state)
 end
 
 
 function ping.tPose()
 	logging.debug("ping.tPose")
-	local_state.emote_vector=player:getPos()
 	-- TODO
+	-- local_state.emote_vector=player:getPos()
 	-- animation.tpose.start()
 end
 -- }}}
@@ -460,10 +476,11 @@ end
 local tail_cooldown
 function aquaticTailVisible()
 	tail_cooldown=tail_cooldown or 0
-	return (local_state.aquatic_enabled and (player:isInWater() or player:isInLava()) or local_state.aquatic_override or tail_cooldown>0) and not getVanillaVisible()
+	return (sharedconfig.load("aquatic_enabled") and (player:isInWater() or player:isInLava()) or sharedconfig.load("aquatic_override") or tail_cooldown>0) and not getVanillaVisible()
 end
 
 local function updateTailVisibility()
+	local old_state_aquatic_tail_visible
 	local anim=player:getPose()
 	local water=player:isInWater()
 	local lava=player:isInLava()
@@ -471,8 +488,8 @@ local function updateTailVisibility()
 	if aquaticTailVisible() and (anim=="SLEEPING" or anim=="SPIN_ATTACK" or anim=="FALL_FLYING" or water or lava) then
 		tail_cooldown=anim=="SPIN_ATTACK" and 60 or (tail_cooldown >= 10 and tail_cooldown or 10)
 	end
-	if old_state.aquaticTailVisible ~= aquaticTailVisible() then pmRefresh() end
-	old_state.aquaticTailVisible=aquaticTailVisible()
+	if old_state_aquatic_tail_visible ~= aquaticTailVisible() then pmRefresh() end
+	old_state_aquatic_tail_visible=aquaticTailVisible()
 end
 
 -- armor {{{
@@ -625,27 +642,27 @@ function animateTail(val)
 	end
 end
 
-anim_tick=0
-anim_cycle=0
-old_state.anim_cycle=0
+STATE.current.anim_tick=0
+STATE.current.anim_cycle=0
+STATE.old.anim_cycle=0
 
-function animateTick()
-	anim_tick = anim_tick + 1
+local function animateTick()
+	STATE.current.anim_tick = STATE.current.anim_tick + 1
 	if aquaticTailVisible() then
 		local velocity = player:getVelocity()
 
 		if aquaticTailVisible() then
-			old_state.anim_cycle=anim_cycle
+			STATE.old.anim_cycle=STATE.current.anim_cycle
 			local player_speed = math.sqrt(velocity.x^2 + velocity.y^2 + velocity.z^2)
 			local animation=player:getPose()
 			local factor=(not player:isInWater() and (animation=="FALL_FLYING" or animation=="SPIN_ATTACK")) and 0.5 or 5
-			anim_cycle=anim_cycle + (player_speed*factor+0.75)
+			STATE.current.anim_cycle=STATE.current.anim_cycle + (player_speed*factor+0.75)
 			-- bubble animation would go here but i don't have that (yet)
 		end
 
 	else
-		old_state.anim_cycle=anim_cycle
-		anim_cycle=anim_cycle+1
+		STATE.old.anim_cycle=STATE.current.anim_cycle
+		STATE.current.anim_cycle=STATE.current.anim_cycle+1
 	end
 end
 
@@ -655,8 +672,14 @@ end
 
 -- initialize values -- {{{
 function player_init()
-	local_state.health=player:getHealth()
-	old_state.health=local_state.health
+	local function health_callback(new, old)
+		if old > new then
+			hurt()
+		end
+		PartsManager.refreshPart(SHATTER)
+	end
+
+	sharedstate.init("health", player:getHealth(), health_callback)
 	-- TODO possibly reconsider if this should be redone
 	-- actually it's probably fine, it's jsut here because i forget visibility settings
 	-- local all_parts=util.recurseModelGroup(model)
@@ -664,9 +687,7 @@ function player_init()
 	-- for k, v in pairs(all_parts) do
 	-- 	v:setVisible(nil)
 	-- end
-	setLocalState()
 	pmRefresh()
-	syncState()
 	events.ENTITY_INIT:remove("player_init")
 end
 
@@ -679,23 +700,17 @@ if avatar:canEditVanillaModel() then
 else
 	model:setVisible(false)
 end
-anim_tick=0
+STATE.current.anim_tick=0
 -- }}}
 
 -- Tick function -- {{{
 function hostTick()
-	local_state.health=player:getHealth()
-	if local_state.health ~= old_state.health then
-		if local_state.health < old_state.health then
-			ping.oof(local_state.health)
-		end
-		syncState()
-	end
+	sharedstate.set("health", player:getHealth())
 end
 
 function tick()
-	color_check=player:isInLava() ~= (player:getDimensionName()=="minecraft:the_nether")
-	if old_state.color_check~=color_check then
+	STATE.current.color_check=player:isInLava() ~= (player:getDimensionName()=="minecraft:the_nether")
+	if STATE.old.color_check~=STATE.current.color_check then
 		setColor()
 	end
 	-- optimization, only execute these once a second --
@@ -709,7 +724,7 @@ function tick()
 
 		-- Sync state every 10 seconds
 		if world.getTimeOfDay() % (20*10) == 0 then
-			syncState()
+			sharedstate.sync()
 		end
 	end
 
@@ -733,9 +748,7 @@ function tick()
 	-- Check for queued PartsManager refresh
 	doPmRefresh()
 	-- End of tick --
-	old_state.health=player:getHealth()
-	old_state.color_check=color_check
-	local_state.anim=player:getPose()
+	STATE.old.color_check=STATE.current.color_check
 end
 events.TICK:register(function() if player then tick() end end, "main_tick")
 -- }}}
@@ -743,13 +756,13 @@ events.TICK:register(function() if player then tick() end end, "main_tick")
 -- Render function {{{
 local function render(delta)
 	if aquaticTailVisible() then
-		animateMTail((lerp(old_state.anim_cycle, anim_cycle, delta) * 0.2))
+		animateMTail((lerp(STATE.old.anim_cycle, STATE.current.anim_cycle, delta) * 0.2))
 	else
 		resetAngles(model.Body)
 		-- resetAngles(vanilla_model.BODY)
 		-- resetAngles(vanilla_model.JACKET)
 		-- resetAngles(armor_model.CHESTPLATE)
-		animateTail((lerp(old_state.anim_cycle, anim_cycle, delta)))
+		animateTail((lerp(STATE.old.anim_cycle, STATE.current.anim_cycle, delta)))
 	end
 end
 -- TODO this may break animation during death
