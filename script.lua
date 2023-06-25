@@ -37,32 +37,7 @@ STATE={
 	["old"]={}
 }
 
--- this is too horrifying to put into nulllib for now
--- HELL YEAH TIME TO DEPRECATE THIS BITCH!!!
--- syncState {{{
-do
-	local counter=0
-
-	---@deprecated use sharedstate instead
-	function syncState()
-		logging.warn([[Call to deprecated function syncState()
-			]] .. util.traceback())
-		-- ping.setSnoring(skin_state.snore_enabled)
-		if counter < 3 then
-			ping.syncState((setLocalState()))
-			counter=counter+1
-		end
-	end
-
-	local function cooldownDecay()
-		if counter>0 and world.getTime() % 4 == 0 then
-			counter = counter - 1
-		end
-	end
-
-	events.TICK:register(cooldownDecay,"syncStateCooldown")
-end
-
+-- (the last remnants of) syncState {{{
 do
 	local pm_refresh=false
 	function pmRefresh()
@@ -76,29 +51,11 @@ do
 		end
 	end
 end
-
----@deprecated Use sharedstate instead
-function ping.syncState(tbl)
-	logging.warn([[Call to deprecated function pings.syncState()
-		]] .. util.traceback())
-	logging.debug("ping.syncState")
-	for k, v in pairs(tbl) do
-		local_state[k]=v
-	end
-	pmRefresh()
-end
 -- }}}
 
 -- so is this
--- Master and local state variables -- {{{
--- Local State (these are copied by pings at runtime) --
----@deprecated use sharedstate, sharedconfig, or track internally
-local_state={}
----@deprecated use sharedstate with callbacks or track internally
-old_state={}
+-- Master configuration -- {{{
 
----@deprecated use sharedstate, sharedconfig, or track internally
-skin_state={}
 -- master state variables and configuration (do not access within pings) --
 do
 	local is_host=host:isHost()
@@ -113,38 +70,6 @@ do
 		["aquatic_override"]=false
 	}
 	sharedconfig.load_defaults(defaults)
-
-	---@deprecated use config api (TODO) instead
-	function setLocalState()
-		logging.warn([[Call to deprecated function setLocalState()
-			]] .. util.traceback())
-		if host:isHost() then
-			for k, v in pairs(skin_state) do
-				local_state[k]=v
-			end
-		else
-			for k, v in pairs(defaults) do
-				if local_state[k] == nil then local_state[k]=v end
-			end
-		end
-		return local_state
-	end
-	-- TODO reimplement with new data API
-	if host:isHost() then
-		local savedData=config:load()
-		if savedData == nil then
-			for k, v in pairs(defaults) do
-				config:save(k, v)
-			end
-			savedData=config:load()
-		end
-		skin_state=util.mergeTable(
-		util.map(util.parse,config:load()),
-		defaults)
-	else
-		skin_state=defaults
-	end
-	setLocalState()
 end
 
 function printSettings()
@@ -155,17 +80,9 @@ if sharedconfig.load("print_settings") then
 	printSettings()
 end
 
----@deprecated use sharedconfig
-function setState(name, state)
-	if state == nil then
-		skin_state[name]=not skin_state[name]
 	else
-		skin_state[name]=state
 	end
-	-- TODO
-	-- data.save(name, skin_state[name])
 end
-
 -- }}}
 
 -- Parts, groups, other constants -- {{{
