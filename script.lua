@@ -231,21 +231,21 @@ do
 	PM.addPartFunction(model.Body_Tail, function(last) return last and sharedconfig.load("tail_enabled") end)
 	-- no legs, regular tail in water if tail enabled
 	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail, armor_model.LEGGINGS, armor_model.BOOTS}
-	PM.addPartGroupFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
+	PM.addPartListFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 	-- aquatic tail in water
-	PM.addPartGroupFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
+	PM.addPartListFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
 
 	--- Armor state
 	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
-	PM.addPartGroupFunction(all_armor, function(last) return last and sharedconfig.load("armor_enabled") end)
+	PM.addPartListFunction(all_armor, function(last) return last and sharedconfig.load("armor_enabled") end)
 	-- Only show armor if equipped
 	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
 	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
-	PM.addPartGroupFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
+	PM.addPartListFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
 
 
 	-- Disable when vanilla_enabled
-	PM.addPartGroupFunction(MAIN_GROUPS, function(last) return last and not getVanillaVisible() end)
+	PM.addPartListFunction(MAIN_GROUPS, function(last) return last and not getVanillaVisible() end)
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
