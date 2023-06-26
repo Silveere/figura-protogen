@@ -3,12 +3,6 @@
 --- Initial definitions ---
 -- player model backwards compatibility
 model=models.player_model
-armor_model={
-	["BOOTS"]=vanilla_model.BOOTS,
-	["LEGGINGS"]=vanilla_model.LEGGINGS,
-	["CHESTPLATE"]=vanilla_model.CHESTPLATE,
-	["HELMET"]=vanilla_model.HELMET
-}
 ping=pings
 -- Texture dimensions --
 TEXTURE_WIDTH = 256
@@ -114,7 +108,7 @@ VANILLA_GROUPS={
 	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS, vanilla_model.RIGHT_PANTS },
 	["INNER"]={ vanilla_model.HEAD, vanilla_model.BODY, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
 	["ALL"]={ vanilla_model.HEAD, vanilla_model.BODY, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG, vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS, vanilla_model.RIGHT_PANTS },
-	["ARMOR"]=armor_model
+	["ARMOR"]={vanilla_model.LEGGINGS, vanilla_model.BOOTS, vanilla_model.CHESTPLATE, vanilla_model.HELMET}
 }
 
 -- these are inefficient, redundancy is better in this case
@@ -230,7 +224,7 @@ do
 	-- Enable tail setting
 	PM.addPartFunction(model.Body_Tail, function(last) return last and sharedconfig.load("tail_enabled") end)
 	-- no legs, regular tail in water if tail enabled
-	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail, armor_model.LEGGINGS, armor_model.BOOTS}
+	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail, vanilla_model.LEGGINGS, vanilla_model.BOOTS}
 	PM.addPartListFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 	-- aquatic tail in water
 	PM.addPartListFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
