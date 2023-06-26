@@ -13,7 +13,7 @@
 - [.] fix data api
 	- [.] ConfigAPI
 - [.] reimplement avatar settings
-- [ ] fix sound
+- [.] fix sound
 - [ ] fix Blockbench animations
 - [.] fix or disable custom commands (can probably use `/figura run`)
 - [ ] fix armor, won't re-enable until cleanup

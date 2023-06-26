@@ -22,6 +22,7 @@ PartsManager=require("nulllib.PartsManager")
 UVManager=require("nulllib.UVManager")
 sharedstate=require("nulllib.sharedstate")
 sharedconfig=require("nulllib.sharedconfig")
+statemonitor=require("nulllib.statemonitor")
 
 -- shortcuts for /figura run so i don't have to type so much
 C={}
@@ -66,6 +67,7 @@ do
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
 		["snore_enabled"]=true,
+		["snore_augh"]=false,
 		["print_settings"]=false,
 		["vanilla_partial"]=false,
 		["tail_enabled"]=true,
@@ -363,29 +365,57 @@ function setArmor(state)
 	sharedconfig.save("armor_enabled", state)
 end
 
-local function snore() end
+local snore
 -- TODO re-enable snoring
--- do
--- 	local snore_enabled=false
--- 	local snore_index=1
--- 	function snore()
--- 		if snore_enabled then
--- 			-- TODO
--- 			-- sound.playCustomSound(SNORES[snore_index],
--- 			-- 	player.getPos(), vectors.of{20,1})
--- 			snore_index=snore_index%#SNORES+1
--- 		end
--- 	end
--- 
--- 	function setSnoring(state)
--- 		setState("snore_enabled", state)
--- 		ping.setSnoring(skin_state.snore_enabled)
--- 	end
--- 
--- 	function ping.setSnoring(state)
--- 		snore_enabled=state
--- 	end
--- end
+do
+	local snores={sounds["sounds.snore-1"], sounds["sounds.snore-2"], sounds["sounds.snore-3"]}
+	
+	local snore_index=1
+	local is_snoring=false
+
+	---Set optimal settings for random player sounds
+	---@param sound Sound
+	---@return Sound
+	local function sound_settings(sound)
+		return sound:volume(1):pitch(1):pos(player:getPos())
+	end
+
+	local function state_not_sleeping()
+		-- return not player:getPose() ~= "SLEEPING"
+		return player:getPose() ~= "SLEEPING"
+	end
+
+	local function snore_purr()
+		if not is_snoring then
+			is_snoring=true
+			local purr_sound=sound_settings(sounds["entity.cat.purr"]):loop(true):play()
+			local function stop_playback()
+				purr_sound:stop()
+				is_snoring=false
+			end
+			statemonitor.register("snore", state_not_sleeping, stop_playback, 5, true)
+		end
+
+	end
+
+	local function snore_augh()
+		if sharedconfig.load("snore_enabled") then
+			if timers.cooldown(20*4, "snore") then
+				sound_settings(snores[snore_index]):stop():play()
+				snore_index=snore_index%#snores+1
+				print(snore_index)
+			end
+		end
+	end
+	function snore()
+		if sharedconfig.load("snore_augh") then
+			snore_augh()
+		else
+			snore_purr()
+		end
+	end
+
+end
 
 --- Toggle Vanilla ---
 function setVanilla(state)
@@ -646,9 +676,7 @@ function tick()
 	if world.getTimeOfDay() % 20 == 0 then
 
 		if player:getPose() == "SLEEPING" then
-			if timers.cooldown(20*4, "snore") then
-				snore()
-			end
+			snore()
 		end
 
 		-- Sync state every 10 seconds
