@@ -39,6 +39,8 @@ STATE={
 do
 	local pm_refresh=false
 	function pmRefresh()
+		logging.debug([[part refresh queued
+		]], util.traceback())
 		pm_refresh=true
 	end
 
@@ -433,7 +435,6 @@ function aquaticTailVisible()
 end
 
 local function updateTailVisibility()
-	local old_state_aquatic_tail_visible
 	local anim=player:getPose()
 	local water=player:isInWater()
 	local lava=player:isInLava()
@@ -441,8 +442,8 @@ local function updateTailVisibility()
 	if aquaticTailVisible() and (anim=="SLEEPING" or anim=="SPIN_ATTACK" or anim=="FALL_FLYING" or water or lava) then
 		tail_cooldown=anim=="SPIN_ATTACK" and 60 or (tail_cooldown >= 10 and tail_cooldown or 10)
 	end
-	if old_state_aquatic_tail_visible ~= aquaticTailVisible() then pmRefresh() end
-	old_state_aquatic_tail_visible=aquaticTailVisible()
+	if STATE.old.aquatic_tail_visible ~= aquaticTailVisible() then pmRefresh() end
+	STATE.old.aquatic_tail_visible=aquaticTailVisible()
 end
 
 -- armor {{{
