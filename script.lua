@@ -369,7 +369,6 @@ function setArmor(state)
 end
 
 local snore
--- TODO re-enable snoring
 do
 	local snores={sounds["sounds.snore-1"], sounds["sounds.snore-2"], sounds["sounds.snore-3"]}
 	
@@ -634,7 +633,7 @@ function player_init()
 	end
 
 	sharedstate.init("health", player:getHealth(), health_callback)
-	-- TODO possibly reconsider if this should be redone
+	-- TODO set part visibility in avatar.json
 	-- actually it's probably fine, it's jsut here because i forget visibility settings
 	-- local all_parts=util.recurseModelGroup(model)
 
