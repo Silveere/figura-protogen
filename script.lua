@@ -370,6 +370,21 @@ function setArmor(state)
 	sharedconfig.save("armor_enabled", state)
 end
 
+do
+	local purr_sound
+
+	---@param state boolean
+	function purr(state)
+		if state and not purr_sound then
+			purr_sound=sound_settings(sounds["entity.cat.purr"]):loop(true):play()
+		elseif not state then
+			purr_sound:stop()
+			purr_sound=nil
+		end
+		return purr_sound
+	end
+end
+
 local snore
 do
 	local snores={sounds["sounds.snore-1"], sounds["sounds.snore-2"], sounds["sounds.snore-3"]}
@@ -383,16 +398,8 @@ do
 	end
 
 	local function snore_purr()
-		if not is_snoring then
-			is_snoring=true
-			local purr_sound=sound_settings(sounds["entity.cat.purr"]):loop(true):play()
-			local function stop_playback()
-				purr_sound:stop()
-				is_snoring=false
-			end
-			statemonitor.register("snore", state_not_sleeping, stop_playback, 5, true)
-		end
-
+		purr(true)
+		statemonitor.register("snore", state_not_sleeping, function() purr(false) end, 5, true)
 	end
 
 	local function snore_augh()
