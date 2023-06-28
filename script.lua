@@ -687,16 +687,16 @@ function tick()
 		setColor()
 	end
 	-- optimization, only execute these with certain frequency --
-	if world.getTimeOfDay() % 5 == 0 then -- 1/4 second
+	if world.getTime() % 5 == 0 then -- 1/4 second
 		if player:getPose() == "SLEEPING" then
 			snore()
 		end
 
 
 		-- unneeded for now but can uncomment if needed
-		--if world.getTimeOfDay() % 20 == 0 then -- 1 second
+		--if world.getTime() % 20 == 0 then -- 1 second
 			-- Sync state every 10 seconds
-			if world.getTimeOfDay() % (20*10) == 0 then
+			if world.getTime() % (20*10) == 0 then
 				sharedstate.sync()
 			end
 		--end
