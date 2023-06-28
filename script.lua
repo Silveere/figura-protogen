@@ -60,7 +60,6 @@ do
 end
 -- }}}
 
--- so is this
 -- Master configuration -- {{{
 
 -- master state variables and configuration (do not access within pings) --
