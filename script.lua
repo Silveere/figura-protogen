@@ -18,6 +18,13 @@ sharedstate=require("nulllib.sharedstate")
 sharedconfig=require("nulllib.sharedconfig")
 statemonitor=require("nulllib.statemonitor")
 
+---Set optimal settings for random player sounds
+---@param sound Sound
+---@return Sound
+local function sound_settings(sound)
+	return sound:volume(1):pitch(1):pos(player:getPos())
+end
+
 -- shortcuts for /figura run so i don't have to type so much
 C={}
 
@@ -368,13 +375,6 @@ do
 	
 	local snore_index=1
 	local is_snoring=false
-
-	---Set optimal settings for random player sounds
-	---@param sound Sound
-	---@return Sound
-	local function sound_settings(sound)
-		return sound:volume(1):pitch(1):pos(player:getPos())
-	end
 
 	local function state_not_sleeping()
 		-- return not player:getPose() ~= "SLEEPING"
