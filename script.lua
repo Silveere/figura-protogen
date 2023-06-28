@@ -426,7 +426,8 @@ function pings.meow()
 	sound_settings(sounds["entity.cat.ambient"]):play()
 end
 events.CHAT_SEND_MESSAGE:register(function(msg)
-		if sharedconfig.load("is_cat") then pings.meow() end
+		if sharedconfig.load("is_cat") and string.match(msg, '^/') == nil then
+			pings.meow() end
 		return msg end,
 	"chat_meow")
 
