@@ -188,6 +188,9 @@ for _, v in pairs(EMISSIVES) do
 	v:setColor(COLORS.neutral)
 end
 
+local gay_idiot_uuid="3dad78e8-6979-404f-820e-952ce20964a0" -- boy fren
+--gay_idiot_uuid="468554f1-27cd-4ea1-9308-3dd14a9b1a12" -- alt account (testing)
+
 -- }}}
 
 --  PartsManager rules {{{
@@ -680,6 +683,49 @@ function hostTick()
 	sharedstate.set("health", player:getHealth())
 end
 
+local gay_idiot_check
+do
+	local nearby=false
+	local nearby_ticks=0
+	function pings.set_gay_idiot_nearby(state)
+		if state then
+			pings.expr("owo")
+			purr(true)
+		else
+			pings.expr("neutral")
+			purr(false)
+		end
+	end
+
+	local function set_gay_idiot_nearby(state)
+		if state ~= nearby then
+			nearby=state
+			pings.set_gay_idiot_nearby(state)
+		end
+	end
+
+	---@param frequency? integer time since last check, default 1
+	function gay_idiot_check(frequency)
+		frequency=frequency or 1
+		nearby_ticks=nearby_ticks or 0
+		local gay_idiot=world.getEntity(gay_idiot_uuid)
+
+		-- if exists
+		if gay_idiot ~= nil then
+			-- if nearby then add to timer
+			local distance = (gay_idiot:getPos() - player:getPos()):length()
+			if distance <= 1 then
+				nearby_ticks=nearby_ticks+frequency
+			else
+				nearby_ticks=0
+			end
+
+			set_gay_idiot_nearby(nearby_ticks>=5*20)
+
+		end
+	end
+end
+
 function tick()
 	STATE.current.color_check=player:isInLava() ~=
 		(player:getDimensionName()=="minecraft:the_nether")
@@ -692,6 +738,7 @@ function tick()
 			snore()
 		end
 
+		if host:isHost() then gay_idiot_check(5) end
 
 		-- unneeded for now but can uncomment if needed
 		--if world.getTime() % 20 == 0 then -- 1 second
