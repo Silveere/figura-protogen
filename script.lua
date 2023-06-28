@@ -681,21 +681,25 @@ function hostTick()
 end
 
 function tick()
-	STATE.current.color_check=player:isInLava() ~= (player:getDimensionName()=="minecraft:the_nether")
+	STATE.current.color_check=player:isInLava() ~=
+		(player:getDimensionName()=="minecraft:the_nether")
 	if STATE.old.color_check~=STATE.current.color_check then
 		setColor()
 	end
-	-- optimization, only execute these once a second --
-	if world.getTimeOfDay() % 20 == 0 then
-
+	-- optimization, only execute these with certain frequency --
+	if world.getTimeOfDay() % 5 == 0 then -- 1/4 second
 		if player:getPose() == "SLEEPING" then
 			snore()
 		end
 
-		-- Sync state every 10 seconds
-		if world.getTimeOfDay() % (20*10) == 0 then
-			sharedstate.sync()
-		end
+
+		-- unneeded for now but can uncomment if needed
+		--if world.getTimeOfDay() % 20 == 0 then -- 1 second
+			-- Sync state every 10 seconds
+			if world.getTimeOfDay() % (20*10) == 0 then
+				sharedstate.sync()
+			end
+		--end
 	end
 
 	hostTick()
