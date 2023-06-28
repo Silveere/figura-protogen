@@ -21,7 +21,7 @@ statemonitor=require("nulllib.statemonitor")
 ---Set optimal settings for random player sounds
 ---@param sound Sound
 ---@return Sound
-local function sound_settings(sound)
+function sound_settings(sound)
 	return sound:volume(1):pitch(1):pos(player:getPos())
 end
 
@@ -75,7 +75,8 @@ do
 		["vanilla_partial"]=false,
 		["tail_enabled"]=true,
 		["aquatic_enabled"]=true,
-		["aquatic_override"]=false
+		["aquatic_override"]=false,
+		["is_cat"]=true
 	}
 	sharedconfig.load_defaults(defaults)
 end
@@ -309,6 +310,8 @@ do
 	end
 
 	function hurt()
+		if sharedconfig.load("is_cat") then
+			sound_settings(sounds["entity.cat.hurt"]):play() end
 		lock_color=false
 		changeExpression("hurt", 10)
 		lock_color=true
@@ -411,6 +414,15 @@ do
 	end
 
 end
+
+-- meow
+function pings.meow()
+	sound_settings(sounds["entity.cat.ambient"]):play()
+end
+events.CHAT_SEND_MESSAGE:register(function(msg)
+		if sharedconfig.load("is_cat") then pings.meow() end
+		return msg end,
+	"chat_meow")
 
 --- Toggle Vanilla ---
 function setVanilla(state)
