@@ -2,7 +2,8 @@
 -- TODO rewrite variables: armor_model, model
 --- Initial definitions ---
 -- player model backwards compatibility
-model=models.player_model
+MODEL_NAME="player_model"
+model=models[MODEL_NAME]
 ping=pings
 -- Texture dimensions --
 TEXTURE_WIDTH = 256
