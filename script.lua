@@ -835,7 +835,8 @@ do
 			end
 
 			set_gay_idiot_nearby(nearby_ticks>=5*20)
-
+		else
+			set_gay_idiot_nearby(false)
 		end
 	end
 end
