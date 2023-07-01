@@ -78,7 +78,13 @@ do
 		["aquatic_override"]=false,
 		["is_cat"]=true
 	}
-	sharedconfig.load_defaults(defaults)
+	local function armor_refresh_callback()
+		if player:isLoaded() then pmRefresh() end
+	end
+	local callbacks={
+		["armor_enabled"]=armor_refresh_callback
+	}
+	sharedconfig.load_defaults(defaults, callbacks)
 end
 
 local function printSettings()
