@@ -646,6 +646,113 @@ end
 
 -- }}}
 
+-- Wipers {{{
+do
+	local wiper_state="STOPPED" -- valid states are "STOPPED", "STARTING", "STARTED", "STOPPING"
+	local wiper_wipe=animations[MODEL_NAME].wiper_wipe
+	local wiper_target_state=false
+	local wiper_deploy=animations[MODEL_NAME].wiper_deploy
+	local wiper=model.Head_Accessory.Wiper
+	assert(type(wiper_wipe)=="Animation")
+	assert(type(wiper_deploy)=="Animation")
+	assert(type(wiper)=="ModelPart")
+
+	wiper_wipe:setPriority(1)
+	wiper_deploy:setPriority(0)
+	wiper:setVisible(false)
+
+	---Check if a HOLD type animation is currently held
+	---@param animation Animation Check if an animation is waiting at the end of a hold
+	local function hold_ended(animation)
+		local anim_time=animation:getTime()
+		local anim_length=animation:getLength()
+		
+		return animation:getLoop()=="HOLD" and
+			(anim_time==anim_length or anim_time==0)
+	end
+
+	---Finish and hold an animation on the last frame
+	---@return boolean Whether or not the animation has reached the end of the hold
+	function stop_and_wait(animation)
+		if hold_ended(animation) then
+			return true
+		end
+		animation:setLoop("HOLD")
+		return false
+	end
+
+	-- steps to stop:
+	-- stop wiping animation
+	-- (set to hold, wait for time)
+	-- start retract animation (wiper_deploy, speed: -1)
+	-- wait for end
+	-- finalize state, hide part
+	--
+	-- steps to start:
+	-- show part
+	-- start animation (wiper_deploy, speed: 1)
+	-- wait for end
+	-- start wipe animation, loop
+	local wiper_run_deploy_switch={
+		STOPPED=function(state)
+			if state then
+				wiper_state="STARTING"
+				wiper_deploy:setSpeed(1):stop():play()
+				wiper:setVisible(true)
+			end
+		end,
+		STARTING=function(state)
+			if wiper_deploy:getTime()==wiper_deploy:getLength() then
+				wiper_deploy:stop()
+				wiper_wipe:play():setLoop("LOOP")
+				wiper_state="STARTED"
+			end
+		end,
+		STARTED=function(state)
+			if not state then
+				wiper_state="STOPPING"
+				stop_and_wait(wiper_wipe)
+			end
+		end,
+		STOPPING=function(state)
+			-- stop process has concluded
+			if wiper_deploy:getPlayState() == "PLAYING" and wiper_deploy:getTime()==0 then
+				wiper_state="STOPPED"
+				wiper:setVisible(false)
+				wiper_deploy:stop()
+			elseif stop_and_wait(wiper_wipe) then
+				wiper_wipe:stop()
+				wiper_deploy:setSpeed(-1):play()
+			end
+		end,
+	}
+
+	--- Run deploy action
+	---@param state boolean Should the wiper be deployed?
+	local function wiper_run_deploy(state)
+		wiper_run_deploy_switch[wiper_state](state)
+	end
+
+	local function wiper_sync_state()
+		wiper_run_deploy(wiper_target_state)
+	end
+	--- Set wiper state. Ignores subsequent calls
+	---@param state boolean true to start wiper, false to stop wiper
+	function set_wiper(state)
+		if state ~= wiper_target_state then
+			wiper_target_state=state
+		end
+	end
+
+	function wiper_tick()
+		set_wiper(player:isInRain())
+		wiper_sync_state()
+	end
+
+	events.TICK:register(wiper_tick, "wiper")
+end
+-- }}}
+
 -- initialize values -- {{{
 function player_init()
 	local function health_callback(new, old)
