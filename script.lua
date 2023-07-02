@@ -9,8 +9,18 @@ ping=pings
 TEXTURE_WIDTH = 256
 TEXTURE_HEIGHT = 256
 
+local optrequire
+do
+	local fallback=setmetatable({}, {__index=function() return function() end end})
+	function optrequire(...)
+		local status, req=pcall(require, ...)
+		if status then return req end
+		return fallback
+	end
+end
+
 util = require("nulllib.util")
-logging = require("nulllib.logging")
+logging = optrequire("nulllib.logging")
 timers=require("nulllib.timers")
 nmath=require("nulllib.math")
 PartsManager=require("nulllib.PartsManager")
