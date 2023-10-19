@@ -397,7 +397,7 @@ do
 	function purr(state)
 		if state and not purr_sound then
 			purr_sound=sound_settings(sounds["entity.cat.purr"]):loop(true):play()
-		elseif not state then
+		elseif not state and purr_sound then
 			purr_sound:stop()
 			purr_sound=nil
 		end
