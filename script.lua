@@ -606,20 +606,20 @@ end
 
 function animateMTail(val)
 	local chest_rot = 3
-	local per=2*math.pi
-	model.Body:setRot(vec( wave(val, per, 3), 0, 0 ))
+	local period=2*math.pi
+	model.Body:setRot(vec( wave(val, period, 3), 0, 0 ))
 	-- TODO vanilla model manipulation broke, add chestplate model
-	-- armor_model.CHESTPLATE:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
+	-- armor_model.CHESTPLATE:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
 	-- this makes it work with partial vanilla
-	-- vanilla_model.BODY:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
-	-- vanilla_model.JACKET:setRot(vec( -wave(val, per, math.rad(3)), 0, 0 ))
+	-- vanilla_model.BODY:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
+	-- vanilla_model.JACKET:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
 
-	model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, per, 4), 0, 0 ))
-	model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, per, 4), 0, 0 ))
-	TAIL_BONES[1]:setRot(vec( wave(val-1, per, 7), 0, 0 ))
-	TAIL_BONES[2]:setRot(vec( wave(val-2, per, 8), 0, 0 ))
-	TAIL_BONES[3]:setRot(vec( wave(val-3, per, 12), 0, 0 ))
-	TAIL_BONES[4]:setRot(vec( wave(val-4, per, 15), 0, 0 ))
+	model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, period, 4), 0, 0 ))
+	model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, period, 4), 0, 0 ))
+	TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7), 0, 0 ))
+	TAIL_BONES[2]:setRot(vec( wave(val-2, period, 8), 0, 0 ))
+	TAIL_BONES[3]:setRot(vec( wave(val-3, period, 12), 0, 0 ))
+	TAIL_BONES[4]:setRot(vec( wave(val-4, period, 15), 0, 0 ))
 end
 tail_original_rot={}
 for k, v in ipairs(REG_TAIL_BONES) do
