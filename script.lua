@@ -607,16 +607,22 @@ end
 function animateMTail(val)
 	local chest_rot = 3
 	local period=2*math.pi
-	model.Body:setRot(vec( wave(val, period, 3), 0, 0 ))
 	-- TODO vanilla model manipulation broke, add chestplate model
 	-- armor_model.CHESTPLATE:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
 	-- this makes it work with partial vanilla
 	-- vanilla_model.BODY:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
 	-- vanilla_model.JACKET:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
 
-	model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, period, 4), 0, 0 ))
-	model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, period, 4), 0, 0 ))
-	TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7), 0, 0 ))
+	if player:getVehicle() then
+		TAIL_BONES[1]:setRot(vec(80,0,0))
+	else
+		resetAngles(model.Body)
+		model.Body:setRot(vec( wave(val, period, 3), 0, 0 ))
+		model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, period, 4), 0, 0 ))
+		model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, period, 4), 0, 0 ))
+		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7), 0, 0 ))
+	end
+
 	TAIL_BONES[2]:setRot(vec( wave(val-2, period, 8), 0, 0 ))
 	TAIL_BONES[3]:setRot(vec( wave(val-3, period, 12), 0, 0 ))
 	TAIL_BONES[4]:setRot(vec( wave(val-4, period, 15), 0, 0 ))
