@@ -660,7 +660,14 @@ function animateMTail(val, delta)
 		amplitude_multiplier=0.33
 		TAIL_BONES[1]:setRot(vec(80,0,0))
 	else
-		curve=curveMTail(delta)
+		local pose=player:getPose()
+		if pose ~= "SWIMMING" and pose ~= "SLEEPING" then
+			curve=curveMTail(delta)
+		end
+		if pose == "SLEEPING" then
+			period=6*math.pi
+			amplitude_multiplier=0.3
+		end
 		resetAngles(model.Body)
 		model.Body:setRot(vec( wave(val, period, 3*amplitude_multiplier), 0, 0 ))
 		model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
