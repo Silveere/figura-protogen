@@ -622,7 +622,7 @@ function animateMTail(val)
 		end
 		period=4*math.pi
 		amplitude_multiplier=0.33
-		TAIL_BONES[1]:setRot(vec(85,0,0))
+		TAIL_BONES[1]:setRot(vec(80,0,0))
 	else
 		resetAngles(model.Body)
 		model.Body:setRot(vec( wave(val, period, 3*amplitude_multiplier), 0, 0 ))
