@@ -614,7 +614,7 @@ function animateMTail(val)
 	-- vanilla_model.JACKET:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
 
 	if player:getVehicle() then
-		TAIL_BONES[1]:setRot(vec(80,0,0))
+		TAIL_BONES[1]:setRot(vec(85,0,0))
 	else
 		resetAngles(model.Body)
 		model.Body:setRot(vec( wave(val, period, 3), 0, 0 ))
