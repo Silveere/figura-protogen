@@ -643,7 +643,7 @@ end
 function animateMTail(val, delta)
 	local chest_rot = 3
 	local period=3*math.pi
-	local amplitude_multiplier=0.8
+	local amplitude_multiplier=1
 	local curve=0
 	-- TODO vanilla model manipulation broke, add chestplate model
 	-- armor_model.CHESTPLATE:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
