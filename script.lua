@@ -604,10 +604,46 @@ function resetAngles(part)
 	part:setRot(vec(0,0,0))
 end
 
-function animateMTail(val)
+--- Get the vertical distance between a position and the block hitbox directly below it
+-- @param block BlockState
+-- @param pos Vec3
+function getVerticalBlockOffset(block, pos)
+	local relative_pos=pos-block:getPos()
+	local absolute_offset=0
+	-- print(relative_pos)
+	-- iterates over collision shapes in block
+	for k, shape_corners in ipairs(block:getCollisionShape()) do
+		-- printTable(shape_corners)
+		local above=true
+		for _, axis in ipairs({"x", "z"}) do
+			if not (relative_pos[axis] >= shape_corners[1][axis] and relative_pos[axis] <= shape_corners[2][axis]) then
+				above=false
+			end
+		end
+		-- print("above for shape " .. tostring(k) .. " is " .. tostring(above))
+		absolute_offset=(above and shape_corners[2]["y"] >= absolute_offset) and shape_corners[2]["y"] or absolute_offset
+	end
+	return relative_pos.y-absolute_offset
+end
+
+function curveMTail(delta)
+	local max_curve=-28
+	local block_offset=0.6 -- extra length of tail compared to vanilla model
+	local pos=player:getPos(delta)
+	local block=world.getBlockState(pos)
+	-- if block has a "level" property (this applies to fluids only)
+	if block:getProperties().level or block:isAir() then
+		block=world.getBlockState(pos+vec(0,-1,0))
+	end
+	local block_offset_lerp=1-(math.min(1, math.max(0, getVerticalBlockOffset(block,pos)/block_offset)))
+	return math.lerp(0, max_curve, block_offset_lerp)
+
+end
+
+function animateMTail(val, delta)
 	local chest_rot = 3
-	local period=2*math.pi
-	local amplitude_multiplier=1
+	local period=3*math.pi
+	local amplitude_multiplier=0.8
 	local curve=0
 	-- TODO vanilla model manipulation broke, add chestplate model
 	-- armor_model.CHESTPLATE:setRot(vec( -wave(val, period, math.rad(3)), 0, 0 ))
@@ -624,11 +660,12 @@ function animateMTail(val)
 		amplitude_multiplier=0.33
 		TAIL_BONES[1]:setRot(vec(80,0,0))
 	else
+		curve=curveMTail(delta)
 		resetAngles(model.Body)
 		model.Body:setRot(vec( wave(val, period, 3*amplitude_multiplier), 0, 0 ))
 		model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
 		model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
-		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7*amplitude_multiplier), 0, 0 ))
+		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7*amplitude_multiplier) + curve, 0, 0 ))
 	end
 
 	TAIL_BONES[2]:setRot(vec( wave(val-2, period,  8*amplitude_multiplier) + curve, 0, 0 ))
@@ -916,7 +953,7 @@ events.TICK:register(function() if player then tick() end end, "main_tick")
 -- Render function {{{
 local function render(delta)
 	if aquaticTailVisible() then
-		animateMTail((lerp(STATE.old.anim_cycle, STATE.current.anim_cycle, delta) * 0.2))
+		animateMTail((lerp(STATE.old.anim_cycle, STATE.current.anim_cycle, delta) * 0.2), delta)
 	else
 		resetAngles(model.Body)
 		-- resetAngles(vanilla_model.BODY)
