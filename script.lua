@@ -482,6 +482,7 @@ local function updateTailVisibility()
 	end
 	if STATE.old.aquatic_tail_visible ~= aquaticTailVisible() then pmRefresh() end
 	STATE.old.aquatic_tail_visible=aquaticTailVisible()
+	renderer.forcePaperdoll=aquaticTailVisible()
 end
 
 -- armor {{{
