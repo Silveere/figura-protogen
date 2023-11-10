@@ -601,6 +601,11 @@ function colorArmor(item)
 end
 -- }}}
 
+-- New tail armor {{{
+function buildTailTexture()
+end
+-- }}}
+
 function resetAngles(part)
 	part:setRot(vec(0,0,0))
 end
