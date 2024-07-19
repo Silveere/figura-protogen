@@ -123,6 +123,7 @@ end
 HEAD=model.Head.Head
 FACE=model.Head.Face
 SHATTER=model.Head.Shatter
+TAIL=model.Body_Tail.Tail_L1
 VANILLA_PARTIAL={}
 VANILLA_GROUPS={
 	["HEAD"]={vanilla_model.HEAD, vanilla_model.HAT},
@@ -170,20 +171,20 @@ TAIL_BONES={
 	model.Body.MTail1.MTail2.MTail3.MTail4
 }
 REG_TAIL_BONES={
-	model.Body_Tail,
-	model.Body_Tail.Tail_L2,
-	model.Body_Tail.Tail_L2.Tail_L3,
-	model.Body_Tail.Tail_L2.Tail_L3.fin
+	TAIL,
+	TAIL.Tail_L2,
+	TAIL.Tail_L2.Tail_L3,
+	TAIL.Tail_L2.Tail_L3.fin
 }
 BODY_EMISSIVES={
 	model.Body.MTail1.MTailDots1,
 	model.Body.MTail1.MTail2.MTailDots2,
 	model.Body.MTail1.MTail2.MTail3.MTailDots3,
 	model.Body.MTail1.MTail2.MTail3.MTail4.MTailDots4,
-	model.Body_Tail.TailDots1,
-	model.Body_Tail.Tail_L2.TailDots2,
-	model.Body_Tail.Tail_L2.Tail_L3.TailDots3,
-	model.Body_Tail.Tail_L2.Tail_L3.fin.TailDots4,
+	TAIL.TailDots1,
+	TAIL.Tail_L2.TailDots2,
+	TAIL.Tail_L2.Tail_L3.TailDots3,
+	TAIL.Tail_L2.Tail_L3.fin.TailDots4,
 	model.Head.EmDots,
 	model.LeftArm.LeftArmEm,
 	model.RightArm.RightArmEm,
@@ -251,9 +252,9 @@ do
 	PM.addPartFunction(SHATTER, function(last) return last and sharedstate.get("health") <= 5 end)
 
 	-- Enable tail setting
-	PM.addPartFunction(model.Body_Tail, function(last) return last and sharedconfig.load("tail_enabled") end)
+	PM.addPartFunction(TAIL, function(last) return last and sharedconfig.load("tail_enabled") end)
 	-- no legs, regular tail in water if tail enabled
-	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, model.Body_Tail, vanilla_model.LEGGINGS, vanilla_model.BOOTS}
+	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, TAIL, vanilla_model.LEGGINGS, vanilla_model.BOOTS}
 	PM.addPartListFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 	-- aquatic tail in water
 	PM.addPartListFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
