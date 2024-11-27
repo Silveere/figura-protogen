@@ -2,5 +2,5 @@
 	path = nulllib
 	url = https://gitea.protogen.io/nullbite/nulllib-lua.git
 [submodule ".vim/figuradocs"]
-	path = .vim/figuradocs
+	path = figuradocs
 	url = https://github.com/GrandpaScout/FiguraRewriteVSDocs
