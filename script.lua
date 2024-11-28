@@ -28,7 +28,7 @@ UVManager=require("nulllib.UVManager")
 sharedstate=require("nulllib.sharedstate")
 sharedconfig=require("nulllib.sharedconfig")
 statemonitor=require("nulllib.statemonitor")
-KattArmor=require("kattarmor.KattArmor")
+KattArmor=require("kattarmor.KattArmor")()
 
 ---Set optimal settings for random player sounds
 ---@param sound Sound
@@ -264,9 +264,9 @@ do
 	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
 	PM.addPartListFunction(all_armor, function(last) return last and sharedconfig.load("armor_enabled") end)
 	-- Only show armor if equipped
-	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
-	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
-	PM.addPartListFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
+	-- PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
+	-- PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
+	-- PM.addPartListFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
 
 
 	-- Disable when vanilla_enabled
@@ -274,6 +274,12 @@ do
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
+-- }}}
+
+-- KattArmor Config -- {{{
+KattArmor.Armor.Leggings:addParts(table.unpack(TAIL_LEGGINGS))
+KattArmor.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
+-- KattArmor.
 -- }}}
 
 -- Expression change -- {{{
