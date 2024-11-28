@@ -1,5 +1,11 @@
 # TODO
 
+## THIS BRANCH
+- [ ] Split armor trim overhang into two objects with different UVs; you can
+	  get the 4 pixel wide armor trim hang by combining the left and right
+	  corners of the existing trim (kinda hacky and may break with modded
+	  textures.
+
 ## General
 - [ ] use matrix thing for UVManager (linear algebra is hard)
 - [ ] Add action wheel icons
