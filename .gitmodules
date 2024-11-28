@@ -4,3 +4,6 @@
 [submodule ".vim/figuradocs"]
 	path = figuradocs
 	url = https://github.com/GrandpaScout/FiguraRewriteVSDocs
+[submodule "kattarmor"]
+	path = kattarmor
+	url = https://github.com/KitCat962/Figura-KattArmor

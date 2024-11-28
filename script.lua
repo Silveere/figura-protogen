@@ -28,6 +28,7 @@ UVManager=require("nulllib.UVManager")
 sharedstate=require("nulllib.sharedstate")
 sharedconfig=require("nulllib.sharedconfig")
 statemonitor=require("nulllib.statemonitor")
+KattArmor=require("kattarmor.KattArmor")
 
 ---Set optimal settings for random player sounds
 ---@param sound Sound
