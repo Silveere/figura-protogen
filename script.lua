@@ -258,7 +258,11 @@ do
 	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, TAIL, vanilla_model.LEGGINGS, vanilla_model.BOOTS}
 	PM.addPartListFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 	-- aquatic tail in water
-	PM.addPartListFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
+	local tail_visible_rule=function(last) return last and aquaticTailVisible() end
+
+	PM.addPartListFunction(tail_parts, tail_visible_rule)
+	PM.addPartListFunction(TAIL_LEGGINGS, tail_visible_rule)
+	PM.addPartListFunction(TAIL_BOOTS, tail_visible_rule)
 
 	--- Armor state
 	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
