@@ -28,7 +28,8 @@ UVManager=require("nulllib.UVManager")
 sharedstate=require("nulllib.sharedstate")
 sharedconfig=require("nulllib.sharedconfig")
 statemonitor=require("nulllib.statemonitor")
-KattArmor=require("kattarmor.KattArmor")
+KattArmorTail=require("kattarmor.KattArmor")()
+KattArmor=require("kattarmor.KattArmor")()
 
 ---Set optimal settings for random player sounds
 ---@param sound Sound
@@ -148,22 +149,32 @@ MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.Le
 
 TAIL_LEGGINGS={
 	model.Body.LeggingsTop,
-	model.Body.LeggingsTopTrimF,
-	model.Body.LeggingsTopTrimB,
+	model.Body.LeggingsTopTrim,
 	model.Body.MTail1.Leggings,
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
 TAIL_LEGGINGS_COLOR={
-	model.Body.LeggingsTopTrimF,
-	model.Body.LeggingsTopTrimB,
+	model.Body.LeggingsTopTrim,
 	model.Body.MTail1.Leggings,
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
+
+TAIL_LEGGINGS_TRIM={
+	-- god help me
+	model.Body.LeggingsTopArmorTrim, -- the trim of the normal part
+	model.Body.LeggingsTopTrimArmorTrim, -- the trim of the trim
+	model.Body.MTail1.LeggingsArmorTrim,
+	model.Body.MTail1.LeggingsTrimArmorTrim,
+	model.Body.MTail1.MTail2.LegginsBottomArmorTrim
+}
 TAIL_BOOTS={
 	model.Body.MTail1.MTail2.MTail3.Boot,
-	model.Body.MTail1.MTail2.MTail3.LeatherBoot
+	--model.Body.MTail1.MTail2.MTail3.LeatherBoot
+}
+TAIL_BOOTS_TRIM={
+	model.Body.MTail1.MTail2.MTail3.BootArmorTrim,
 }
 TAIL_BONES={
 	model.Body.MTail1,
@@ -258,15 +269,23 @@ do
 	local mtail_mutually_exclusive={model.LeftLeg, model.RightLeg, TAIL, vanilla_model.LEGGINGS, vanilla_model.BOOTS}
 	PM.addPartListFunction(mtail_mutually_exclusive, function(last) return last and not aquaticTailVisible() end)
 	-- aquatic tail in water
-	PM.addPartListFunction(tail_parts, function(last) return last and aquaticTailVisible() end)
+	local tail_visible_rule=function(last) return last and aquaticTailVisible() end
+
+	PM.addPartListFunction(tail_parts, tail_visible_rule)
+	PM.addPartListFunction(TAIL_LEGGINGS, tail_visible_rule)
+	PM.addPartListFunction(TAIL_LEGGINGS_TRIM, tail_visible_rule)
+	PM.addPartListFunction(TAIL_BOOTS, tail_visible_rule)
+	PM.addPartListFunction(TAIL_BOOTS_TRIM, tail_visible_rule)
 
 	--- Armor state
 	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
 	PM.addPartListFunction(all_armor, function(last) return last and sharedconfig.load("armor_enabled") end)
+	-- Disable vanilla chestplate (KattArmor is better because animation)
+	PM.addPartFunction(vanilla_model.CHESTPLATE, function(_) return false end)
 	-- Only show armor if equipped
-	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
-	PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
-	PM.addPartListFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
+	-- PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
+	-- PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
+	-- PM.addPartListFunction(TAIL_LEGGINGS, function(last) return last and armor_state.leggings end)
 
 
 	-- Disable when vanilla_enabled
@@ -274,6 +293,18 @@ do
 end
 
 SNORES={"snore-1", "snore-2", "snore-3"}
+-- }}}
+
+-- KattArmor Config -- {{{
+
+KattArmorTail.Armor.Leggings:addParts(table.unpack(TAIL_LEGGINGS))
+KattArmorTail.Armor.Leggings:addTrimParts(table.unpack(TAIL_LEGGINGS_TRIM))
+KattArmorTail.Armor.Leggings:setLayer(1)
+KattArmorTail.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
+KattArmorTail.Armor.Boots:addTrimParts(table.unpack(TAIL_BOOTS_TRIM))
+
+KattArmor.Armor.Chestplate:addParts(model.Body.Chestplate, model.LeftArm.Chestplate, model.RightArm.Chestplate)
+KattArmor.Armor.Chestplate:addTrimParts(model.Body.ChestplateTrim, model.LeftArm.ChestplateTrim, model.RightArm.ChestplateTrim)
 -- }}}
 
 -- Expression change -- {{{
@@ -672,10 +703,9 @@ function animateMTail(val, delta)
 			amplitude_multiplier=0.3
 		end
 		resetAngles(model.Body)
-		model.Body:setRot(vec( wave(val, period, 3*amplitude_multiplier), 0, 0 ))
-		model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
-		model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
-		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7*amplitude_multiplier) + curve, 0, 0 ))
+		model.Body:setRot(vec( wave(val, period, 2*amplitude_multiplier), 0, 0 ))
+		-- model.Body.LeggingsTopTrim:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
+		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 4*amplitude_multiplier) + curve, 0, 0 ))
 	end
 
 	TAIL_BONES[2]:setRot(vec( wave(val-2, period,  8*amplitude_multiplier) + curve, 0, 0 ))
