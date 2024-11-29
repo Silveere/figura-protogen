@@ -148,22 +148,20 @@ MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.Le
 
 TAIL_LEGGINGS={
 	model.Body.LeggingsTop,
-	model.Body.LeggingsTopTrimF,
-	model.Body.LeggingsTopTrimB,
+	model.Body.LeggingsTopTrim,
 	model.Body.MTail1.Leggings,
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
 TAIL_LEGGINGS_COLOR={
-	model.Body.LeggingsTopTrimF,
-	model.Body.LeggingsTopTrimB,
+	model.Body.LeggingsTopTrim,
 	model.Body.MTail1.Leggings,
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
 TAIL_BOOTS={
 	model.Body.MTail1.MTail2.MTail3.Boot,
-	model.Body.MTail1.MTail2.MTail3.LeatherBoot
+	--model.Body.MTail1.MTail2.MTail3.LeatherBoot
 }
 TAIL_BONES={
 	model.Body.MTail1,
@@ -282,7 +280,9 @@ SNORES={"snore-1", "snore-2", "snore-3"}
 
 -- KattArmor Config -- {{{
 KattArmor.Armor.Leggings:addParts(table.unpack(TAIL_LEGGINGS))
+KattArmor.Armor.Leggings:setLayer(1)
 KattArmor.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
+--KattArmor.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
 -- KattArmor.
 -- }}}
 
@@ -683,8 +683,7 @@ function animateMTail(val, delta)
 		end
 		resetAngles(model.Body)
 		model.Body:setRot(vec( wave(val, period, 3*amplitude_multiplier), 0, 0 ))
-		model.Body.LeggingsTopTrimF:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
-		model.Body.LeggingsTopTrimB:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
+		-- model.Body.LeggingsTopTrim:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
 		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7*amplitude_multiplier) + curve, 0, 0 ))
 	end
 
