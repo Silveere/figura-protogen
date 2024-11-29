@@ -173,6 +173,9 @@ TAIL_BOOTS={
 	model.Body.MTail1.MTail2.MTail3.Boot,
 	--model.Body.MTail1.MTail2.MTail3.LeatherBoot
 }
+TAIL_BOOTS_TRIM={
+	model.Body.MTail1.MTail2.MTail3.BootArmorTrim,
+}
 TAIL_BONES={
 	model.Body.MTail1,
 	model.Body.MTail1.MTail2,
@@ -272,6 +275,7 @@ do
 	PM.addPartListFunction(TAIL_LEGGINGS, tail_visible_rule)
 	PM.addPartListFunction(TAIL_LEGGINGS_TRIM, tail_visible_rule)
 	PM.addPartListFunction(TAIL_BOOTS, tail_visible_rule)
+	PM.addPartListFunction(TAIL_BOOTS_TRIM, tail_visible_rule)
 
 	--- Armor state
 	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
@@ -297,6 +301,7 @@ KattArmorTail.Armor.Leggings:addParts(table.unpack(TAIL_LEGGINGS))
 KattArmorTail.Armor.Leggings:addTrimParts(table.unpack(TAIL_LEGGINGS_TRIM))
 KattArmorTail.Armor.Leggings:setLayer(1)
 KattArmorTail.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
+KattArmorTail.Armor.Boots:addTrimParts(table.unpack(TAIL_BOOTS_TRIM))
 
 KattArmor.Armor.Chestplate:addParts(model.Body.Chestplate, model.LeftArm.Chestplate, model.RightArm.Chestplate)
 KattArmor.Armor.Chestplate:addTrimParts(model.Body.ChestplateTrim, model.LeftArm.ChestplateTrim, model.RightArm.ChestplateTrim)

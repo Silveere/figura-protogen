@@ -3890,6 +3890,49 @@
 			},
 			"type": "cube",
 			"uuid": "35c2fc2d-6bb8-dc5c-0fa2-f34be3ea790a"
+		},
+		{
+			"name": "BootArmorTrim",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"light_emission": 0,
+			"render_order": "default",
+			"allow_mirror_modeling": true,
+			"from": [-2, -4, -1],
+			"to": [2, 2, 1],
+			"autouv": 0,
+			"color": 7,
+			"inflate": 0.26,
+			"origin": [0, 0, 0],
+			"faces": {
+				"north": {
+					"uv": [40, 20, 44, 26],
+					"texture": 8
+				},
+				"east": {
+					"uv": [54, 20, 56, 26],
+					"texture": 8
+				},
+				"south": {
+					"uv": [40, 20, 44, 26],
+					"texture": 8
+				},
+				"west": {
+					"uv": [44, 20, 46, 26],
+					"texture": 8
+				},
+				"up": {
+					"uv": [2, 18, 6, 20],
+					"texture": null
+				},
+				"down": {
+					"uv": [2, 18, 6, 20],
+					"texture": null
+				}
+			},
+			"type": "cube",
+			"uuid": "4c6600b3-f271-496b-9bbc-a8435bb10547"
 		}
 	],
 	"outliner": [
@@ -4072,6 +4115,7 @@
 									"children": [
 										"0e623698-1df6-c518-9bd7-fad0c12dcf20",
 										"93881f7c-3fd7-c4ce-9bbe-5c99fbb4ed85",
+										"4c6600b3-f271-496b-9bbc-a8435bb10547",
 										"2e3f0fb3-5b68-be22-f6a6-f91a030f0851",
 										{
 											"name": "MTailDots3",
