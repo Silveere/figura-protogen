@@ -682,9 +682,9 @@ function animateMTail(val, delta)
 			amplitude_multiplier=0.3
 		end
 		resetAngles(model.Body)
-		model.Body:setRot(vec( wave(val, period, 3*amplitude_multiplier), 0, 0 ))
+		model.Body:setRot(vec( wave(val, period, 2*amplitude_multiplier), 0, 0 ))
 		-- model.Body.LeggingsTopTrim:setRot(vec( wave(val-1, period, 4*amplitude_multiplier), 0, 0 ))
-		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 7*amplitude_multiplier) + curve, 0, 0 ))
+		TAIL_BONES[1]:setRot(vec( wave(val-1, period, 4*amplitude_multiplier) + curve, 0, 0 ))
 	end
 
 	TAIL_BONES[2]:setRot(vec( wave(val-2, period,  8*amplitude_multiplier) + curve, 0, 0 ))
