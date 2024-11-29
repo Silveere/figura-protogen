@@ -28,6 +28,7 @@ UVManager=require("nulllib.UVManager")
 sharedstate=require("nulllib.sharedstate")
 sharedconfig=require("nulllib.sharedconfig")
 statemonitor=require("nulllib.statemonitor")
+KattArmorTail=require("kattarmor.KattArmor")()
 KattArmor=require("kattarmor.KattArmor")()
 
 ---Set optimal settings for random player sounds
@@ -159,6 +160,15 @@ TAIL_LEGGINGS_COLOR={
 	model.Body.MTail1.LeggingsTrim,
 	model.Body.MTail1.MTail2.LeggingsBottom
 }
+
+TAIL_LEGGINGS_TRIM={
+	-- god help me
+	model.Body.LeggingsTopArmorTrim, -- the trim of the normal part
+	model.Body.LeggingsTopTrimArmorTrim, -- the trim of the trim
+	model.Body.MTail1.LeggingsArmorTrim,
+	model.Body.MTail1.LeggingsTrimArmorTrim,
+	model.Body.MTail1.MTail2.LegginsBottomArmorTrim
+}
 TAIL_BOOTS={
 	model.Body.MTail1.MTail2.MTail3.Boot,
 	--model.Body.MTail1.MTail2.MTail3.LeatherBoot
@@ -260,11 +270,14 @@ do
 
 	PM.addPartListFunction(tail_parts, tail_visible_rule)
 	PM.addPartListFunction(TAIL_LEGGINGS, tail_visible_rule)
+	PM.addPartListFunction(TAIL_LEGGINGS_TRIM, tail_visible_rule)
 	PM.addPartListFunction(TAIL_BOOTS, tail_visible_rule)
 
 	--- Armor state
 	local all_armor=util.reduce(util.mergeTable, {VANILLA_GROUPS.ARMOR, TAIL_LEGGINGS, TAIL_BOOTS})
 	PM.addPartListFunction(all_armor, function(last) return last and sharedconfig.load("armor_enabled") end)
+	-- Disable vanilla chestplate (KattArmor is better because animation)
+	PM.addPartFunction(vanilla_model.CHESTPLATE, function(_) return false end)
 	-- Only show armor if equipped
 	-- PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.Boot, function(last) return last and armor_state.boots end)
 	-- PM.addPartFunction(model.Body.MTail1.MTail2.MTail3.LeatherBoot, function(last) return last and armor_state.leather_boots end)
@@ -279,11 +292,14 @@ SNORES={"snore-1", "snore-2", "snore-3"}
 -- }}}
 
 -- KattArmor Config -- {{{
-KattArmor.Armor.Leggings:addParts(table.unpack(TAIL_LEGGINGS))
-KattArmor.Armor.Leggings:setLayer(1)
-KattArmor.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
---KattArmor.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
--- KattArmor.
+
+KattArmorTail.Armor.Leggings:addParts(table.unpack(TAIL_LEGGINGS))
+KattArmorTail.Armor.Leggings:addTrimParts(table.unpack(TAIL_LEGGINGS_TRIM))
+KattArmorTail.Armor.Leggings:setLayer(1)
+KattArmorTail.Armor.Boots:addParts(table.unpack(TAIL_BOOTS))
+
+KattArmor.Armor.Chestplate:addParts(model.Body.Chestplate, model.LeftArm.Chestplate, model.RightArm.Chestplate)
+KattArmor.Armor.Chestplate:addTrimParts(model.Body.ChestplateTrim, model.LeftArm.ChestplateTrim, model.RightArm.ChestplateTrim)
 -- }}}
 
 -- Expression change -- {{{
